@@ -55,7 +55,17 @@ const T = {
 
 const EXPERIENCE = [
   {
-    id: "ARC-2026", org: "Arcova", role: "Cybersecurity Consulting Intern", period: "JUN 2026 — AUG 2026",
+    id: "SHU-2026", org: "Seton Hall University", role: "Graduate Assistant", period: "AUG 2026 — MAY 2027",
+    clearance: "TEACHING", loc: "South Orange, NJ",
+    log: [
+      "Taught Developmental Mathematics II to 50+ students, covering algebra, statistics, and quantitative problem-solving",
+      "Analyzed assessment and coursework performance to identify learning gaps and deliver targeted, data-driven academic support",
+      "Managed grading, assessments, and exam proctoring while maintaining accurate academic records and course operations",
+    ],
+    stack: ["Statistics", "Quantitative Analysis", "Data Analysis", "Problem Solving", "Teaching", "Communication"],
+  },
+  {
+    id: "ARC-2026", org: "Arcova", role: "Cybersecurity Consulting Intern", period: "JUN 2026 — DEC 2026",
     clearance: "AI TEAM", loc: "Holmdel, NJ",
     log: [
       "Shipped a full-stack AI platform to GCP behind Entra ID SSO and 300+ CI tests, launching 4 LLM features to production",
