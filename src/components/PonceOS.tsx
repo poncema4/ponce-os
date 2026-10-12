@@ -68,11 +68,11 @@ const EXPERIENCE = [
     id: "ARC-2026", org: "Arcova", role: "Cybersecurity Consulting Intern", period: "JUN 2026 — DEC 2026",
     clearance: "AI TEAM", loc: "Holmdel, NJ",
     log: [
-      "Shipped a full-stack AI platform to GCP behind Entra ID SSO and 300+ CI tests, launching 4 LLM features to production",
+      "Shipped a full-stack AI platform to Azure behind Entra ID SSO and 300+ CI tests, launching 4 LLM features to production",
       "Architected keyless Claude inference on Vertex AI with IAM auth, eliminating 100% of stored credentials for SOC 2",
       "Ported an agentic LangChain research pipeline with web-search tooling, slashing client research time by 95%",
     ],
-    stack: ["Python", "FastAPI", "Next.js", "GCP", "Vertex AI", "LangChain", "SOC 2"],
+    stack: ["Python", "FastAPI", "Next.js", "Azure", "Vertex AI", "LangChain", "SOC 2"],
   },
   {
     id: "SHU-2025", org: "Seton Hall University", role: "Cybersecurity Research & Systems Assistant", period: "DEC 2025 — MAY 2026",
@@ -744,7 +744,7 @@ function Terminal({ lang, setLang, playClick, onMatrix, onCast, music }: {
         print([
           { text: "languages    python · typescript · java · c++ · sql", cls: "hd" },
           { text: "frameworks   fastapi · next.js · react · langchain · celery" },
-          { text: "cloud/data   gcp (vertex ai) · aws · docker · k8s · postgres · redis" },
+          { text: "cloud/data   azure (vertex ai) · aws · docker · k8s · postgres · redis" },
           { text: "proven by    scroll up — every chip in the service log shipped", cls: "dim" },
         ]);
         break;
