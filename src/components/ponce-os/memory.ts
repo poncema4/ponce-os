@@ -18,6 +18,7 @@ export const DISCOVERIES: Discovery[] = [
   { id: "matrix", en: { name: "Red pill", hint: "follow the white rabbit" }, es: { name: "Pastilla roja", hint: "sigue al conejo blanco" } },
   { id: "kraken", en: { name: "Respects paid", hint: "summon the kraken" }, es: { name: "Respetos", hint: "invoca al kraken" } },
   { id: "breach", en: { name: "Root", hint: "crack the firewall" }, es: { name: "Root", hint: "rompe el firewall" } },
+  { id: "broadside", en: { name: "Broadside", hint: "order the ship to fire its cannons" }, es: { name: "Andanada", hint: "ordena al barco disparar los canones" } },
   { id: "konami", en: { name: "Old school", hint: "an old cheat code, from the 80s" }, es: { name: "Vieja escuela", hint: "un truco clasico de los 80" } },
   { id: "first-catch", en: { name: "First catch", hint: "land a fish in the fishing game" }, es: { name: "Primera pesca", hint: "pesca algo en el juego" } },
   { id: "flag", en: { name: "Deep water", hint: "find the flag in the fishing journal" }, es: { name: "Aguas profundas", hint: "encuentra la bandera en el diario" } },
@@ -114,6 +115,13 @@ export function welcomeLine(visit: { visits: number; prevLast: number; prevSecti
     return `Bienvenido de vuelta. Visita ${n}, la ultima fue ${when}.` + (where ? ` Llegaste hasta "${where}".` : "");
   }
   return `Welcome back. Visit ${n}, last one was ${when}.` + (where ? ` You got as far as "${where}".` : "");
+}
+
+export const CANNON_EVENT = "pos:cannon";
+/** Fire the ship's cannons (the 3D scene listens; with no WebGL it is just the discovery). */
+export function fireCannons() {
+  try { window.dispatchEvent(new Event(CANNON_EVENT)); } catch { /* no window */ }
+  discover("broadside");
 }
 
 export const DISCOVER_EVENT = "pos:discover";

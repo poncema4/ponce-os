@@ -22,9 +22,9 @@ test.describe("memory: first visit", () => {
     await expect(page.locator(".pos-welcome")).toHaveCount(0);
     await expect.poll(async () => (await stored(page)).visits).toBe(1);
     await openLog(page);
-    await expect(page.locator(".pos-log-list li")).toHaveCount(14);
+    await expect(page.locator(".pos-log-list li")).toHaveCount(15);
     await expect(page.locator(".pos-log-list li.got")).toHaveCount(0);
-    await expect(page.locator(".pos-log-count")).toContainText("0 / 14");
+    await expect(page.locator(".pos-log-count")).toContainText("0 / 15");
   });
 
   test("a reload in the same session is not a second visit", async ({ page }) => {
@@ -86,11 +86,27 @@ test.describe("discoveries", () => {
     await expect.poll(async () => Object.keys((await stored(page)).found || {})).toEqual(expect.arrayContaining(["polyglot", "synth"]));
   });
 
+  test("the `fire` command and the hero button both fire the cannons and unlock Broadside", async ({ page }) => {
+    const errors: string[] = [];
+    page.on("pageerror", (e) => errors.push(String(e)));
+    page.on("console", (m) => { if (m.type() === "error") errors.push(m.text()); });
+    await boot(page);
+    await runCmd(page, "fire");
+    await expect(page.locator(".pos-term-body")).toContainText(/broadside/i);
+    await expect.poll(async () => Object.keys((await stored(page)).found || {})).toContain("broadside");
+    await page.evaluate(() => localStorage.removeItem("ponce-os:memory:v1"));
+    await page.locator(".pos-fire").scrollIntoViewIfNeeded();
+    await page.locator(".pos-fire").click();
+    await page.waitForTimeout(1500); // let the volley play through the render loop
+    expect(errors, "firing must not throw or log errors").toEqual([]);
+    expect(await page.evaluate(() => !!document.querySelector("canvas"))).toBe(true);
+  });
+
   test("a corrupt or hand-edited save never breaks the page", async ({ page }) => {
     await page.addInitScript((k) => localStorage.setItem(k, "{{{ not json"), KEY);
     await boot(page);
     await openLog(page);
-    await expect(page.locator(".pos-log-list li")).toHaveCount(14);
+    await expect(page.locator(".pos-log-list li")).toHaveCount(15);
   });
 });
 

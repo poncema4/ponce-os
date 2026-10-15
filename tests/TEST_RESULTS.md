@@ -1,11 +1,11 @@
 # ponce-os — test results
 
-Last full run: **2026-10-14** (after the redesign). Regenerate with `npm test` (unit + e2e).
+Last full run: **2026-10-15** (served with the real `vercel.json` security headers). Regenerate with `npm test` (unit + e2e).
 
 | Suite | Runner | Count | Result |
 |---|---|---|---|
-| Unit (8 files: keel, github, scan, motion, leaderboard, fishing, fishing-journal, memory) | Vitest | 151 | ✅ pass |
-| E2E — desktop + mobile (Pixel 5), 5 spec files | Playwright | 284 | ✅ **278 pass, 6 skipped, 0 failed** |
+| Unit (9 files: keel, github, scan, motion, leaderboard, fishing, fishing-journal, memory, api-errors) | Vitest | 154 | ✅ pass |
+| E2E — desktop + mobile (Pixel 5), 5 spec files, under the production CSP | Playwright | 286 | ✅ **280 pass, 6 skipped, 0 failed** |
 | Lint | ESLint | — | ✅ 0 errors (warnings are pre-existing react-refresh notes) |
 | Types / build | tsc, vite | — | ✅ clean |
 
@@ -23,6 +23,7 @@ Real bugs the new suite caught, not just cosmetic changes:
 - The `ponce{...}` flag in the fishing journal was never displayed.
 - Duplicate React keys (two `SHU-` entries), a stale resume PDF, and a non-sticky status bar.
 - Old `--dim` text colour failed WCAG (4.07:1); every text token is now >= 4.5:1 (asserted in `design.spec.ts`).
+- The leaderboard API returned internal error text (`detail`) on failure; now generic, with a unit test proven against the old code (negative control).
 - Jitter: motion used per-frame constants (speed varied with fps). Now dt-based (`motion.ts`, 16 unit tests), scroll reads cached, pixel ratio adaptive.
 
 ## New spec files

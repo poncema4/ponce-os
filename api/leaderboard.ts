@@ -97,6 +97,8 @@ export default async function handler(req: Request): Promise<Response> {
     return json({ error: "method not allowed" }, 405);
   } catch (e) {
     // never 500 the game — the frontend falls back to local scores
-    return json({ error: "leaderboard unavailable", detail: String(e).slice(0, 120) }, 503);
+    // the real reason goes to the server log only; visitors get a generic message (no env names, no stack)
+    console.error("leaderboard error:", String(e).slice(0, 200));
+    return json({ error: "leaderboard unavailable" }, 503);
   }
 }

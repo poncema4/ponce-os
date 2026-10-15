@@ -21,6 +21,12 @@ npm run test:e2e    # Playwright — real browser, desktop + mobile, ~5-7 min
 Vercel actually ships. `vite dev` tolerates things the production build rejects — that is
 why the e2e suite never points at the dev server.
 
+## Security headers
+
+`vercel.json` sends the CSP and friends, but `vite preview` does not. To test under the real headers,
+serve `dist/` with a tiny server that applies `vercel.json` (see `SECURITY.md`) on port 4173 before
+running Playwright; `reuseExistingServer` will pick it up.
+
 ## Also run before pushing
 
 ```bash
@@ -71,6 +77,7 @@ Every test runs on **both** projects: `desktop` (Desktop Chrome) and `mobile` (P
 | `mechanisms.spec.ts` | every terminal command, the `keel` assistant, `breach`, konami + matrix, `scan` privacy, resume download, every link, nav landing below the sticky bar, fallbacks, boot |
 | `design.spec.ts` | layout at 5 sizes (1440, 1024, 768, 390, 360): nothing covered, no sideways scroll, sticky bar, 44px tap targets, contrast, skip link, landmarks, privacy, self-hosted fonts |
 | `fishing.spec.ts` | the game as a real dialog (focus trap, scroll lock, focus return), tap/space/button input, early strikes spook the fish, the fish journal and flag, corrupt-save recovery, a full cast-to-land catch |
+| `memory.spec.ts` | returning-visitor welcome, discoveries, captain's log dialog, the `fire` cannons, corrupt-save safety |
 | `helpers.ts` | shared `boot`, `runCmd`, `openMenuIfPhone` |
 
 Smooth-scroll and CSS transitions are slow under software rendering, so landing/transition

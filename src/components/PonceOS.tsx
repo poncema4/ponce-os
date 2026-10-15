@@ -14,7 +14,7 @@ import { runVisitorScan, scanLineClass } from "./ponce-os/scan";
 import { fetchGitHub, timeAgo } from "./ponce-os/github";
 import { Uplink } from "./ponce-os/uplink";
 import { useSiteMemory, CaptainsLog, DiscoveryToast, LogButton, Lantern } from "./ponce-os/captains-log";
-import { discover } from "./ponce-os/memory";
+import { discover, fireCannons } from "./ponce-os/memory";
 import { keelReply, KEEL_GREETING } from "./ponce-os/keel";
 import { Globe3D, useTilt } from "./ponce-os/three-d";
 
@@ -40,7 +40,7 @@ const T = {
     nav_research: "research", nav_certs: "skills", nav_contact: "contact",
     terminal_hint: "this terminal is real. try `help`, `scan`, `keel`, or `sudo hire-marco`.",
     cta_resume: "Download resume", cta_chat: "Book a chat", cta_email: "Email me",
-    open_terminal: "open terminal", cast: "cast a line", menu: "menu", menu_close: "close",
+    open_terminal: "open terminal", cast: "cast a line", fire: "fire cannons", menu: "menu", menu_close: "close",
     hint: "scroll to dive",
     proof_papers: "ACM papers, 2026", proof_llm: "LLM features shipped to production",
     proof_servers: "game servers launched in Java", proof_certs: "Anthropic certifications",
@@ -68,7 +68,7 @@ const T = {
     nav_research: "investigacion", nav_certs: "habilidades", nav_contact: "contacto",
     terminal_hint: "esta terminal es real. prueba `help`, `scan`, `keel`, o `sudo hire-marco`.",
     cta_resume: "Descargar CV", cta_chat: "Agendar una llamada", cta_email: "Escribeme",
-    open_terminal: "abrir terminal", cast: "lanzar el anzuelo", menu: "menu", menu_close: "cerrar",
+    open_terminal: "abrir terminal", cast: "lanzar el anzuelo", fire: "disparar canones", menu: "menu", menu_close: "cerrar",
     hint: "desplaza para sumergirte",
     proof_papers: "articulos ACM, 2026", proof_llm: "funciones LLM en produccion",
     proof_servers: "servidores de juego lanzados en Java", proof_certs: "certificaciones de Anthropic",
@@ -541,7 +541,7 @@ function Terminal({ lang, setLang, playClick, onMatrix, onCast, music }: {
   const scroller = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const COMMANDS = ["help","whoami","neofetch","ls","cat","history","nmap","ssh","sudo","ping","uname","matrix","lang","clear","resume","pwd","date","echo","exit","vim","reboot","su","stack","scan","github","music","keel","breach","cast"];
+  const COMMANDS = ["help","whoami","neofetch","ls","cat","history","nmap","ssh","sudo","ping","uname","matrix","lang","clear","resume","pwd","date","echo","exit","vim","reboot","su","stack","scan","github","music","keel","breach","cast","fire"];
 
   useEffect(() => { scroller.current?.scrollTo({ top: scroller.current.scrollHeight }); }, [lines]);
 
@@ -674,6 +674,7 @@ function Terminal({ lang, setLang, playClick, onMatrix, onCast, music }: {
           { text: "  lang es|en      switch language / cambiar idioma" },
           { text: "  matrix          you already know" },
           { text: "  resume          download the pdf" },
+          { text: "  fire            order the ship to fire a broadside" },
           { text: "  scan            threat-assess yourself (all local, 0 bytes sent)" },
           { text: "  github          live repo telemetry via satellite uplink" },
           { text: "  music           procedural synthwave (synthesized, no files)" },
@@ -827,6 +828,11 @@ function Terminal({ lang, setLang, playClick, onMatrix, onCast, music }: {
         setTimeout(() => window.location.reload(), 600);
         break;
       case "gg": print([{ text: "gg wp" }]); break;
+      case "fire":
+      case "cannon":
+        fireCannons();
+        print([{ text: "all hands! broadside! (look at the ship)", cls: "hd" }]);
+        break;
       case "kraken":
         discover("kraken");
         print([
@@ -1043,6 +1049,27 @@ export function PonceOS() {
 
   useKonami(useCallback(() => { discover("konami"); setPenguins(true); }, []));
 
+  // the cannons go boom (optional: only with the SND toggle on). One filtered noise burst, no audio files.
+  const soundRef = useRef(false);
+  useEffect(() => { soundRef.current = sound; }, [sound]);
+  useEffect(() => {
+    const boom = () => {
+      if (!soundRef.current) return;
+      try {
+        audioCtx.current ??= new AudioContext();
+        const ctx = audioCtx.current, len = Math.floor(ctx.sampleRate * 0.5);
+        const buf = ctx.createBuffer(1, len, ctx.sampleRate), d = buf.getChannelData(0);
+        for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3);
+        const src = ctx.createBufferSource(); src.buffer = buf;
+        const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 420;
+        const gain = ctx.createGain(); gain.gain.value = 0.5;
+        src.connect(lp).connect(gain).connect(ctx.destination); src.start();
+      } catch { /* audio unavailable */ }
+    };
+    window.addEventListener("pos:cannon", boom);
+    return () => window.removeEventListener("pos:cannon", boom);
+  }, []);
+
   // the document language follows the toggle (screen readers pick the right voice)
   useEffect(() => { document.documentElement.lang = lang; if (lang === "es") discover("polyglot"); }, [lang]);
 
@@ -1187,6 +1214,7 @@ export function PonceOS() {
               <a href={LINKS.linkedin} target="_blank" rel="noopener noreferrer">linkedin</a>
               <a href="#terminal" onClick={go("terminal")}>{t.open_terminal}</a>
               <button className="cast-launch" onClick={() => setFishing(true)} aria-label="open the fishing minigame">{t.cast}</button>
+              <button className="pos-fire" onClick={fireCannons} aria-label="fire the ship's cannons">{t.fire}</button>
             </div>
             <Uptime label={t.uptime} />
           </div>

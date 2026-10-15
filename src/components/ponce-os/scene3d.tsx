@@ -9,6 +9,7 @@
 // That is what keeps it smooth when the frame rate wobbles.
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
+import { CANNON_EVENT } from "./memory";
 import { clamp, clampDt, damp, dampAngle, lerp, smoothstep, waveH, shipPose } from "./motion";
 
 const SEABED_Y = -62;
@@ -432,6 +433,88 @@ function makeFoam() {
 
 /* ============================ SCENE ============================ */
 
+
+// ---- broadside: muzzle flash, smoke and recoil on demand (the `fire` command / hero button) ----
+// Everything is pooled up front and driven by dt, so a volley allocates nothing and cannot stutter.
+function makeBroadside(scene: THREE.Scene) {
+  const CANNON_X = [-1.2, -0.2, 0.8, 1.8], STEP = 0.09, SMOKE_LIFE = 2.1, POOL = 16;
+  const flash = new THREE.PointLight(0xffc27a, 0, 16, 1.5);
+  scene.add(flash);
+  const c = document.createElement("canvas");
+  c.width = c.height = 64;
+  const g = c.getContext("2d")!;
+  const grad = g.createRadialGradient(32, 32, 2, 32, 32, 32);
+  grad.addColorStop(0, "rgba(255,255,255,.9)"); grad.addColorStop(0.5, "rgba(255,255,255,.35)"); grad.addColorStop(1, "rgba(255,255,255,0)");
+  g.fillStyle = grad; g.fillRect(0, 0, 64, 64);
+  const tex = new THREE.CanvasTexture(c);
+  const puffs = Array.from({ length: POOL }, () => {
+    const m = new THREE.SpriteMaterial({ map: tex, color: 0xaebbd0, transparent: true, opacity: 0, depthWrite: false });
+    const sp = new THREE.Sprite(m); sp.visible = false; scene.add(sp);
+    return { sp, m, age: 99, vx: 0, vy: 0, vz: 0 };
+  });
+  // muzzle fireballs: short, hot, additive
+  const BALLS = 10, BALL_LIFE = 0.24;
+  const balls = Array.from({ length: BALLS }, () => {
+    const m = new THREE.SpriteMaterial({ map: tex, color: 0xffb347, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending });
+    const sp = new THREE.Sprite(m); sp.visible = false; scene.add(sp);
+    return { sp, m, age: 99 };
+  });
+  let nextBall = 0;
+  const shots: { at: number; x: number; side: number; done: boolean }[] = [];
+  let startAt = -1, next = 0, pending = false, kick = 0, shake = 0;
+  const tmp = new THREE.Vector3();
+
+  return {
+    fire() { pending = true; },
+    /** call once per frame; returns the camera shake to add (world units) */
+    update(t: number, dt: number, ship: THREE.Object3D) {
+      if (pending) {
+        pending = false; startAt = t; shots.length = 0;
+        CANNON_X.forEach((x, i) => { for (const side of [-1, 1]) shots.push({ at: i * STEP + (side > 0 ? STEP / 2 : 0), x, side, done: false }); });
+      }
+      if (startAt >= 0) {
+        for (const sh of shots) {
+          if (sh.done || t - startAt < sh.at) continue;
+          sh.done = true;
+          const { w } = hullProfile((sh.x - STERN_X) / (BOW_X - STERN_X));
+          tmp.set(sh.x, 1.3, sh.side * (w + 0.5));
+          ship.localToWorld(tmp);
+          flash.position.copy(tmp); flash.intensity = 16;
+          const bl = balls[nextBall++ % BALLS];
+          bl.sp.position.copy(tmp); bl.sp.visible = true; bl.age = 0;
+          const p = puffs[next++ % POOL];
+          p.sp.position.copy(tmp); p.sp.visible = true; p.age = 0;
+          p.vx = (Math.random() - 0.5) * 0.4; p.vy = 0.35 + Math.random() * 0.25; p.vz = (Math.random() - 0.5) * 0.4;
+          p.sp.scale.setScalar(1.2);
+          kick += 0.012; shake = Math.min(0.12, shake + 0.03);
+        }
+        if (shots.every((x) => x.done)) startAt = -1;
+      }
+      flash.intensity = damp(flash.intensity, 0, 14, dt);
+      kick = damp(kick, 0, 5, dt); shake = damp(shake, 0, 7, dt);
+      for (const p of puffs) {
+        if (!p.sp.visible) continue;
+        p.age += dt;
+        const k = p.age / SMOKE_LIFE;
+        if (k >= 1) { p.sp.visible = false; p.m.opacity = 0; continue; }
+        p.sp.position.x += p.vx * dt; p.sp.position.y += p.vy * dt; p.sp.position.z += p.vz * dt;
+        p.sp.scale.setScalar(1.2 + k * 6);
+        p.m.opacity = 0.8 * (1 - k) * Math.min(1, p.age * 8);
+      }
+      for (const b of balls) {
+        if (!b.sp.visible) continue;
+        b.age += dt;
+        const k = b.age / BALL_LIFE;
+        if (k >= 1) { b.sp.visible = false; b.m.opacity = 0; continue; }
+        b.sp.scale.setScalar(3.2 - k * 1.4);
+        b.m.opacity = 1 - k * k;
+      }
+      return { kick, shake };
+    },
+    dispose() { tex.dispose(); puffs.forEach((p) => p.m.dispose()); balls.forEach((b) => b.m.dispose()); },
+  };
+}
+
 export function Scene3D({ onUnsupported }: { onUnsupported: () => void }) {
   const mount = useRef<HTMLDivElement>(null);
 
@@ -503,6 +586,9 @@ export function Scene3D({ onUnsupported }: { onUnsupported: () => void }) {
     scene.add(ship.group);
     const foam = makeFoam();
     scene.add(foam.ring, foam.wake);
+    const broadside = makeBroadside(scene);
+    const onCannon = () => broadside.fire();
+    window.addEventListener(CANNON_EVENT, onCannon);
 
     /* ================= UNDERWATER WORLD ================= */
 
@@ -719,6 +805,8 @@ export function Scene3D({ onUnsupported }: { onUnsupported: () => void }) {
       g.rotation.x = damp(g.rotation.x, (hPort - hStar) * 0.13, 3.2, dt);  // roll: port side up rolls the ship to starboard
       ship.update(t);
       foam.update(t);
+      const bs = broadside.update(t, dt, g);
+      g.rotation.z += bs.kick;
 
       // bubbles rise at units-per-second
       const ba = bubGeo.attributes.position as THREE.BufferAttribute;
@@ -755,6 +843,7 @@ export function Scene3D({ onUnsupported }: { onUnsupported: () => void }) {
       const lookY = lerp(2.2, SEABED_Y + 2.5, dive);
       const lx = lerp(g.position.x * 0.4, chest.position.x, dive);
       const lz = lerp(g.position.z * 0.4, chest.position.z, dive);
+      camera.position.x += Math.sin(t * 61) * bs.shake; camera.position.y += Math.cos(t * 47) * bs.shake * 0.6;
       camera.lookAt(lx, lookY, lz);
 
       // frame the ship beside the headline instead of behind it: slide the view sideways on wide
@@ -780,6 +869,8 @@ export function Scene3D({ onUnsupported }: { onUnsupported: () => void }) {
       cancelAnimationFrame(raf);
       ro.disconnect();
       window.removeEventListener("resize", resize);
+      window.removeEventListener(CANNON_EVENT, onCannon);
+      broadside.dispose();
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("pointerup", onUp);
       window.removeEventListener("pointercancel", onUp);
