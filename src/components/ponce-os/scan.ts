@@ -1,6 +1,14 @@
 // Visitor threat assessment — reads what the BROWSER exposes and shows it back.
 // Everything computed client-side. Zero bytes transmitted. Zero trust works both ways.
 
+/** Terminal colour class for one scan output line. Case-insensitive on purpose: the scan prints
+ *  lowercase, and the old check compared against UPPERCASE so no line was ever highlighted. */
+export function scanLineClass(s: string): "hd" | "dim" | undefined {
+  if (/threat|initiating/i.test(s)) return "hd";
+  if (/^\s+(lesson|data)\b/i.test(s)) return "dim";
+  return undefined;
+}
+
 function fnv1a(s: string): string {
   let h = 0x811c9dc5;
   for (let i = 0; i < s.length; i++) {

@@ -43,6 +43,7 @@ const clean = (s: unknown) =>
     // Mirrors cleanName() in src/components/ponce-os/leaderboard.ts, plus the control range.
     // \x00-\x1F written as ESCAPES, not raw bytes -- raw control bytes here made grep
     // treat this source as binary and are invisible in every editor.
+    // eslint-disable-next-line no-control-regex -- stripping control characters from names is the whole point
     .replace(/[<>&"'`\x00-\x1F]/g, "")
     .trim()
     .slice(0, MAX_NAME) || "anon";

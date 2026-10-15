@@ -4,13 +4,17 @@
 // v6.0 "Leviathan": WebGL ocean, synthwave engine, visitor scan, live GitHub uplink,
 // keel chat, breach minigame — all in src/components/ponce-os/ modules.
 // Zero external deps beyond what the repo already ships. No emojis; ASCII only.
+// Layout, type and colour live in ./ponce-os/styles.ts; the 3D voyage in ./ponce-os/scene3d.tsx.
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Scene3D } from "./ponce-os/scene3d";
-import { Fishing, FISHING_CSS } from "./ponce-os/fishing";
+import { Fishing } from "./ponce-os/fishing";
+import { CSS } from "./ponce-os/styles";
 import { SynthEngine } from "./ponce-os/audio";
-import { runVisitorScan } from "./ponce-os/scan";
+import { runVisitorScan, scanLineClass } from "./ponce-os/scan";
 import { fetchGitHub, timeAgo } from "./ponce-os/github";
 import { Uplink } from "./ponce-os/uplink";
+import { useSiteMemory, CaptainsLog, DiscoveryToast, LogButton, Lantern } from "./ponce-os/captains-log";
+import { discover } from "./ponce-os/memory";
 import { keelReply, KEEL_GREETING } from "./ponce-os/keel";
 import { Globe3D, useTilt } from "./ponce-os/three-d";
 
@@ -23,33 +27,57 @@ const T = {
     role: "My personal website :) enjoy!",
     tagline: "I build AI systems that respect Zero Trust.",
     boot_skip: "press any key to skip",
-    uptime: "uptime — coding since age 10",
-    sec_terminal: "TERMINAL",
-    sec_experience: "SERVICE LOG",
-    sec_projects: "CASE FILES",
-    sec_research: "DECLASSIFIED RESEARCH",
-    sec_certs: "CREDENTIALS",
-    sec_uplink: "SATELLITE UPLINK",
-    sec_contact: "ESTABLISH CONNECTION",
+    uptime: "coding since age 10",
+    sec_terminal: "Terminal", cap_terminal: "a real shell. nothing leaves your browser.",
+    sec_experience: "Experience", cap_experience: "the service log",
+    sec_projects: "Selected work", cap_projects: "case files",
+    sec_research: "Research", cap_research: "declassified",
+    sec_certs: "Skills and education", cap_certs: "toolbox, degrees and certifications",
+    edu: "Education", toolbox: "Toolbox", certs_h: "Certifications",
+    sec_uplink: "Live activity", cap_uplink: "satellite uplink",
+    sec_contact: "Contact", cap_contact: "establish connection",
+    nav_terminal: "terminal", nav_experience: "experience", nav_projects: "work", nav_uplink: "activity",
+    nav_research: "research", nav_certs: "skills", nav_contact: "contact",
     terminal_hint: "this terminal is real. try `help`, `scan`, `keel`, or `sudo hire-marco`.",
-    dossier_hint: "hover to declassify",
-    contact_line: "Want to talk systems, security, or games? Pick a channel.",
+    cta_resume: "Download resume", cta_chat: "Book a chat", cta_email: "Email me",
+    open_terminal: "open terminal", cast: "cast a line", menu: "menu", menu_close: "close",
+    hint: "scroll to dive",
+    proof_papers: "ACM papers, 2026", proof_llm: "LLM features shipped to production",
+    proof_servers: "game servers launched in Java", proof_certs: "Anthropic certifications",
+    more_roles: (n: number) => `${n} earlier, research and teaching roles`,
+    uplink_sub: "live telemetry from api.github.com, drawn on a hand-rolled 3D globe",
+    contact_big: "Want to talk systems, security, or games?",
+    contact_sub: "Pick a channel. The terminal knows too: `sudo hire-marco`.",
+    credentials_sub: "14 Anthropic + 1 AWS",
+    skip: "Skip to content",
   },
   es: {
     role: "Mi sitio web personal :) ¡Que lo disfrutes!",
     tagline: "Construyo sistemas de IA que respetan Zero Trust.",
     boot_skip: "presiona cualquier tecla para saltar",
-    uptime: "tiempo activo — programando desde los 10",
-    sec_terminal: "TERMINAL",
-    sec_experience: "REGISTRO DE SERVICIO",
-    sec_projects: "EXPEDIENTES",
-    sec_research: "INVESTIGACION DESCLASIFICADA",
-    sec_certs: "CREDENCIALES",
-    sec_uplink: "ENLACE SATELITAL",
-    sec_contact: "ESTABLECER CONEXION",
+    uptime: "programando desde los 10",
+    sec_terminal: "Terminal", cap_terminal: "una shell real. nada sale de tu navegador.",
+    sec_experience: "Experiencia", cap_experience: "el registro de servicio",
+    sec_projects: "Proyectos", cap_projects: "expedientes",
+    sec_research: "Investigacion", cap_research: "desclasificada",
+    sec_certs: "Habilidades y educacion", cap_certs: "herramientas, titulos y certificaciones",
+    edu: "Educacion", toolbox: "Herramientas", certs_h: "Certificaciones",
+    sec_uplink: "Actividad en vivo", cap_uplink: "enlace satelital",
+    sec_contact: "Contacto", cap_contact: "establecer conexion",
+    nav_terminal: "terminal", nav_experience: "experiencia", nav_projects: "proyectos", nav_uplink: "actividad",
+    nav_research: "investigacion", nav_certs: "habilidades", nav_contact: "contacto",
     terminal_hint: "esta terminal es real. prueba `help`, `scan`, `keel`, o `sudo hire-marco`.",
-    dossier_hint: "pasa el cursor para desclasificar",
-    contact_line: "Hablemos de sistemas, seguridad, o videojuegos. Elige un canal.",
+    cta_resume: "Descargar CV", cta_chat: "Agendar una llamada", cta_email: "Escribeme",
+    open_terminal: "abrir terminal", cast: "lanzar el anzuelo", menu: "menu", menu_close: "cerrar",
+    hint: "desplaza para sumergirte",
+    proof_papers: "articulos ACM, 2026", proof_llm: "funciones LLM en produccion",
+    proof_servers: "servidores de juego lanzados en Java", proof_certs: "certificaciones de Anthropic",
+    more_roles: (n: number) => `${n} puestos anteriores, de investigacion y docencia`,
+    uplink_sub: "telemetria en vivo de api.github.com, dibujada en un globo 3D hecho a mano",
+    contact_big: "Hablemos de sistemas, seguridad o videojuegos?",
+    contact_sub: "Elige un canal. La terminal tambien lo sabe: `sudo hire-marco`.",
+    credentials_sub: "14 de Anthropic + 1 de AWS",
+    skip: "Saltar al contenido",
   },
 };
 
@@ -230,6 +258,31 @@ const LINKS = {
   email: "mailto:marcpon8@gmail.com",
 };
 
+
+// the roles shown open by default; everything else sits under one "earlier roles" disclosure
+const EDUCATION = [
+  { degree: "Master of Science in Cybersecurity", school: "Seton Hall University", when: "Expected Aug 2027", gpa: "GPA 4.0" },
+  { degree: "Bachelor of Science in Computer Science", school: "Seton Hall University", when: "May 2026", gpa: "GPA 3.8" },
+];
+
+const TOOLBOX = [
+  { label: "languages", items: ["Python", "TypeScript", "JavaScript", "Java", "C++", "SQL", "Lua"] },
+  { label: "ai and data", items: ["LangChain", "Claude API", "Vertex AI", "OpenAI API", "PyTorch", "Scikit-learn"] },
+  { label: "web and apis", items: ["React", "Next.js", "FastAPI", "Tailwind CSS", "Supabase"] },
+  { label: "cloud and security", items: ["Azure", "Entra ID SSO", "AWS", "Docker", "Kubernetes", "Zero Trust", "SOC 2", "Linux", "CI/CD"] },
+  { label: "data stores", items: ["PostgreSQL", "MongoDB", "Redis", "SQLite"] },
+];
+
+// the roles shown open by default; everything else sits under one "earlier roles" disclosure
+const FEATURED = new Set(["ARC-2026", "SHU-2026", "PSH-2025", "NBT-2022"]);
+
+// A number in a bullet is the proof. Wrap them so the eye lands there (numbers with %, +, x, B+, $ or thousands).
+const METRIC = /(\$[\d,]+|\d[\d,.]*(?:\+|%|B\+|x)(?![\w])|\d{1,3}(?:,\d{3})+\+?)/g;
+function Metric({ text }: { text: string }) {
+  const parts = text.split(METRIC);
+  return <>{parts.map((p, i) => (i % 2 ? <strong key={i} className="m">{p}</strong> : p))}</>;
+}
+
 const TUX = [
   "   .--.   ",
   "  |o_o |  ",
@@ -337,13 +390,13 @@ function Constellation({ paused }: { paused: boolean }) {
           const ax = pts[i].x * w, ay = pts[i].y * h, bx = pts[j].x * w, by = pts[j].y * h;
           const dx = ax - bx, dy = ay - by, dist = Math.hypot(dx, dy);
           if (dist < 110) {
-            ctx.strokeStyle = `rgba(52, 211, 153, ${(1 - dist / 110) * 0.28})`;
+            ctx.strokeStyle = `rgba(52,121,211, ${(1 - dist / 110) * 0.28})`;
             ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
           }
         }
       }
       for (const p of pts) {
-        ctx.fillStyle = "rgba(110, 231, 183, 0.85)";
+        ctx.fillStyle = "rgba(110,164,231, 0.85)";
         ctx.beginPath(); ctx.arc(p.x * w, p.y * h, 1.4, 0, Math.PI * 2); ctx.fill();
       }
       raf = requestAnimationFrame(tick);
@@ -371,9 +424,9 @@ function MatrixRain({ onDone }: { onDone: () => void }) {
     const glyphs = "01アイウエオカキクケコサシスセソ$#@%&";
     let raf = 0;
     const tick = () => {
-      ctx.fillStyle = "rgba(3, 7, 5, 0.12)";
+      ctx.fillStyle = "rgba(3,5,7, 0.12)";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = "#34d399"; ctx.font = "13px monospace";
+      ctx.fillStyle = "#3479d3"; ctx.font = "13px monospace";
       drops.forEach((y, i) => {
         const ch = glyphs[Math.floor(Math.random() * glyphs.length)];
         ctx.fillText(ch, i * 14, y * 14);
@@ -571,6 +624,7 @@ function Terminal({ lang, setLang, playClick, onMatrix, onCast, music }: {
         else { pinLeft.push(pinArr[i]); gLeft.push(gArr[i]); }
       }
       if (exact === 4) {
+        discover("breach");
         setBreach(null);
         setIsRoot(true); // breached the firewall = earned the root session
         onMatrix();      // victory lap
@@ -667,7 +721,9 @@ function Terminal({ lang, setLang, playClick, onMatrix, onCast, music }: {
           { text: "it sleeps beneath the treasure at 62 meters.", cls: "keel" },
           { text: "dive to the bottom of the sea, come back, and call its name.", cls: "keel" },
         ]);
-        else if (arg === "arcova.txt") print(EXPERIENCE[0].log.map((s) => ({ text: "  - " + s })));
+        // look the entry up by id: it used to read EXPERIENCE[0], which became the Seton Hall role
+        // when newer entries were added at the top, so `cat arcova.txt` printed the wrong job
+        else if (arg === "arcova.txt") print((EXPERIENCE.find((e) => e.id === "ARC-2026") ?? EXPERIENCE[0]).log.map((s) => ({ text: "  - " + s })));
         else if (arg === "motd") print([{ text: "  deny by default, ship by friday." }]);
         else if (!arg) print([{ text: "usage: cat <file> — try arcova.txt or motd", cls: "warn" }]);
         else print([{ text: `cat: ${arg}: permission denied (nice try)`, cls: "warn" }]);
@@ -716,7 +772,7 @@ function Terminal({ lang, setLang, playClick, onMatrix, onCast, music }: {
         ]);
         break;
       case "uname": print([{ text: "ponce-os 5.0-arcova #1 smp x86_64 gnu/linux (panic-free since 2015)" }]); break;
-      case "matrix": onMatrix(); print([{ text: "wake up, visitor...", cls: "dim" }]); break;
+      case "matrix": discover("matrix"); onMatrix(); print([{ text: "wake up, visitor...", cls: "dim" }]); break;
       case "cast":
         onCast();
         print([
@@ -730,6 +786,7 @@ function Terminal({ lang, setLang, playClick, onMatrix, onCast, music }: {
         else print([{ text: "usage: lang es | lang en", cls: "warn" }]);
         break;
       case "resume": {
+        discover("resume");
         print([
           { text: "requesting /home/marco/marco_ponce_resume.pdf ...", cls: "dim" },
           { text: "transfer complete — check your downloads.", cls: "hd" },
@@ -771,6 +828,7 @@ function Terminal({ lang, setLang, playClick, onMatrix, onCast, music }: {
         break;
       case "gg": print([{ text: "gg wp" }]); break;
       case "kraken":
+        discover("kraken");
         print([
           { text: "        ___", cls: "keel" },
           { text: "     .-'   `-.", cls: "keel" },
@@ -786,8 +844,9 @@ function Terminal({ lang, setLang, playClick, onMatrix, onCast, music }: {
         ]);
         break;
       case "scan":
+        discover("scan");
         print([{ text: "running visitor assessment (local only)...", cls: "dim" }]);
-        runVisitorScan().then((res) => print(res.map((s) => ({ text: s, cls: s.includes("THREAT") || s.includes("INITIATING") ? "hd" : s.startsWith("  LESSON") || s.startsWith("  DATA") ? "dim" : undefined }))));
+        runVisitorScan().then((res) => print(res.map((s) => ({ text: s, cls: scanLineClass(s) }))));
         break;
       case "github":
         print([{ text: "establishing satellite uplink to api.github.com...", cls: "dim" }]);
@@ -801,10 +860,12 @@ function Terminal({ lang, setLang, playClick, onMatrix, onCast, music }: {
         break;
       case "music": {
         const on = music.toggle();
+        if (on) discover("synth");
         print([{ text: on ? "synthwave engine online — every note is math. `music` again to stop." : "synthwave engine offline.", cls: on ? "hd" : "dim" }]);
         break;
       }
       case "keel":
+        discover("keel");
         setKeelMode(true);
         print(KEEL_GREETING.map((s) => ({ text: "  " + s, cls: "keel" })));
         break;
@@ -892,7 +953,8 @@ function Uptime({ label }: { label: string }) {
 }
 
 // Isolated scroll HUD: progress bar + depth gauge with their OWN state, so
-// scrolling never re-renders the main tree (that re-render was the scroll hitch)
+// scrolling never re-renders the main tree (that re-render was the scroll hitch).
+// The gauge is a thin line on the right edge: it never sits over text.
 function ScrollHud() {
   const [pct, setPct] = useState(0);
   useEffect(() => {
@@ -912,8 +974,8 @@ function ScrollHud() {
     <>
       <div className="pos-progress" style={{ width: `${pct}%` }} aria-hidden="true" />
       <div className="pos-depth" aria-hidden="true">
-        {pct < 2 ? "SURFACE" : `DEPTH ${Math.round(pct * 0.62)}m`}
-        {pct >= 2 && <span className="pos-depth-bar"><span style={{ height: `${pct}%` }} /></span>}
+        <span className="pos-depth-label">{pct < 2 ? "SURFACE" : `DEPTH ${Math.round(pct * 0.62)}m`}</span>
+        <span className="pos-depth-bar"><span style={{ height: `${pct}%` }} /></span>
       </div>
     </>
   );
@@ -930,6 +992,26 @@ function Clock() {
 
 /* ============================== MAIN ============================== */
 
+const NAV_IDS = ["terminal", "service-log", "case-files", "uplink", "research", "credentials", "contact"] as const;
+
+function ExperienceEntry({ e }: { e: (typeof EXPERIENCE)[number] }) {
+  return (
+    <article className="pos-log-entry pos-reveal">
+      <div className="pos-log-meta">
+        <span className="pos-log-period">{e.period}</span>
+        <span className="pos-log-clearance">{e.clearance}</span>
+        <span className="pos-log-id">{e.id}</span>
+      </div>
+      <div className="pos-log-body">
+        <h3>{e.role} <span className="at">@ {e.org}</span></h3>
+        <span className="loc">{e.loc}</span>
+        <ul>{e.log.map((l, i) => <li key={i}><Metric text={l} /></li>)}</ul>
+        <div className="pos-chips">{e.stack.map((x) => <span key={x}>{x}</span>)}</div>
+      </div>
+    </article>
+  );
+}
+
 export function PonceOS() {
   const reduced = useReducedMotion();
   const [booted, setBooted] = useState(false);
@@ -940,6 +1022,7 @@ export function PonceOS() {
   const [fishing, setFishing] = useState(false);
   const [webglOk, setWebglOk] = useState(true);
   const [musicOn, setMusicOn] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const audioCtx = useRef<AudioContext | null>(null);
   const synth = useRef<SynthEngine | null>(null);
   const tilt = useTilt();
@@ -948,6 +1031,7 @@ export function PonceOS() {
   const toggleMusic = useCallback(() => {
     synth.current ??= new SynthEngine();
     const on = synth.current.toggle();
+    if (on) discover("synth");
     setMusicOn(on);
     return on;
   }, []);
@@ -957,9 +1041,20 @@ export function PonceOS() {
   }, [reduced]);
   const finishBoot = useCallback(() => { sessionStorage.setItem("ponceos-booted", "1"); setBooted(true); }, []);
 
-  useKonami(useCallback(() => setPenguins(true), []));
+  useKonami(useCallback(() => { discover("konami"); setPenguins(true); }, []));
 
-  // Synthesized keyclick — WebAudio oscillator, no audio files.
+  // the document language follows the toggle (screen readers pick the right voice)
+  useEffect(() => { document.documentElement.lang = lang; if (lang === "es") discover("polyglot"); }, [lang]);
+
+  // Escape closes the phone menu
+  useEffect(() => {
+    if (!menuOpen) return;
+    const fn = (e: KeyboardEvent) => { if (e.key === "Escape") setMenuOpen(false); };
+    window.addEventListener("keydown", fn);
+    return () => window.removeEventListener("keydown", fn);
+  }, [menuOpen]);
+
+  // Synthesized keyclick: WebAudio oscillator, no audio files.
   const playClick = useCallback(() => {
     if (!sound) return;
     try {
@@ -980,23 +1075,24 @@ export function PonceOS() {
     const io = new IntersectionObserver(
       (es) => es.forEach((e) => e.isIntersecting && e.target.classList.add("in")),
       // pre-trigger 300px below the viewport: panels are revealed BEFORE fast
-      // scrolling reaches them — no mid-scroll pop-in
+      // scrolling reaches them, so there is no mid-scroll pop-in
       { threshold: 0, rootMargin: "0px 0px 300px 0px" }
     );
     document.querySelectorAll(".pos-reveal").forEach((el) => io.observe(el));
-    // "you are here" nav beacon — pure DOM class flips, NO React state:
-    // beacon state in the tree caused a full re-render at every section
-    // boundary mid-scroll (the scroll hitch that briefly returned)
-    // track which sections are in the center band; light the beacon for the one
-    // that is, and clear it entirely when none are (e.g. up in the hero — this is
-    // why "terminal" used to stay stuck-lit at the top)
+    // "you are here" nav beacon: pure DOM class flips, NO React state, because a beacon in the tree
+    // caused a full re-render at every section boundary mid-scroll (the scroll hitch that returned).
+    // Track which sections are in the centre band; light the one that is, clear it when none are
+    // (e.g. up in the hero).
     const inBand = new Set<string>();
     const secIo = new IntersectionObserver(
       (es) => {
         es.forEach((e) => { if (e.isIntersecting) inBand.add(e.target.id); else inBand.delete(e.target.id); });
         const activeId = [...inBand][0];
-        document.querySelectorAll(".pos-nav a").forEach((a) =>
-          a.classList.toggle("on", !!activeId && a.getAttribute("href") === `#${activeId}`));
+        document.querySelectorAll(".pos-nav a, .pos-sheet a").forEach((a) => {
+          const on = !!activeId && a.getAttribute("href") === `#${activeId}`;
+          a.classList.toggle("on", on);
+          if (on) a.setAttribute("aria-current", "location"); else a.removeAttribute("aria-current");
+        });
       },
       { rootMargin: "-40% 0px -55% 0px" }
     );
@@ -1004,444 +1100,239 @@ export function PonceOS() {
     return () => { io.disconnect(); secIo.disconnect(); };
   }, [booted]);
 
-  const nav = [
-    ["terminal", t.sec_terminal], ["service-log", t.sec_experience], ["case-files", t.sec_projects],
-    ["uplink", t.sec_uplink], ["research", t.sec_research], ["credentials", t.sec_certs], ["contact", t.sec_contact],
-  ] as const;
+  const navLabels: Record<(typeof NAV_IDS)[number], string> = {
+    "terminal": t.nav_terminal, "service-log": t.nav_experience, "case-files": t.nav_projects,
+    "uplink": t.nav_uplink, "research": t.nav_research, "credentials": t.nav_certs, "contact": t.nav_contact,
+  };
+
+  // the site remembers you: visits, sections reached, secrets found (this browser only)
+  const [logOpen, setLogOpen] = useState(false);
+  const labelOf = useCallback((id: string) => (navLabels as Record<string, string>)[id] ?? id, [navLabels]);
+  const memory = useSiteMemory(lang, labelOf);
+  const closeLog = useCallback(() => setLogOpen(false), []);
+
+  const go = (id: string) => (e: React.MouseEvent) => {
+    // smooth glide, clean URL: no /#section residue. scroll-margin-top keeps the heading below the sticky bar.
+    e.preventDefault();
+    setMenuOpen(false);
+    document.getElementById(id)?.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+  };
 
   if (!booted) return (<><style>{CSS}</style><BootScreen onDone={finishBoot} lang={lang} /></>);
+
+  const featured = EXPERIENCE.filter((e) => FEATURED.has(e.id));
+  const earlier = EXPERIENCE.filter((e) => !FEATURED.has(e.id));
+  const proof = [
+    { n: "2", l: t.proof_papers }, { n: "4", l: t.proof_llm },
+    { n: "300+", l: t.proof_servers }, { n: "14", l: t.proof_certs },
+  ];
 
   return (
     <div className="pos-root">
       <style>{CSS}</style>
+      <a className="pos-skip" href="#terminal" onClick={go("terminal")}>{t.skip}</a>
       {!reduced && webglOk && <Scene3D onUnsupported={() => setWebglOk(false)} />}
-      <div className="pos-scanlines" aria-hidden="true" />
       <ScrollHud />
+      <Lantern reduced={reduced} />
+      <DiscoveryToast id={memory.toast} lang={lang} />
+      {logOpen && <CaptainsLog mem={memory.mem} lang={lang} onClose={closeLog} />}
       {matrix && <MatrixRain onDone={() => setMatrix(false)} />}
       {penguins && <PenguinRain onDone={() => setPenguins(false)} />}
-      {fishing && <Fishing onClose={() => setFishing(false)} />}
-      {!fishing && (
-        <button className="cast-launch" onClick={() => setFishing(true)} aria-label="open the fishing minigame">
-          cast a line
-        </button>
-      )}
+      {fishing && <Fishing onClose={() => setFishing(false)} sound={sound} />}
 
-      {/* status bar */}
+      {/* status bar: sticky on every screen size; on phones the links live in a menu sheet */}
       <header className="pos-statusbar">
-        <span className="pos-host">marco@ponce-os</span>
-        <nav className="pos-nav">
-          {nav.map(([id, label]) => (
-            <a
-              key={id}
-              href={`#${id}`}
-              onClick={(e) => {
-                // smooth glide, clean URL — no /#section residue
-                e.preventDefault();
-                document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
-              }}
-            >{label.toLowerCase()}</a>
-          ))}
+        <a className="pos-host" href="#top" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: reduced ? "auto" : "smooth" }); }}>marco@ponce-os</a>
+        <nav className="pos-nav" aria-label="sections">
+          {NAV_IDS.map((id) => <a key={id} href={`#${id}`} onClick={go(id)}>{navLabels[id]}</a>)}
         </nav>
         <div className="pos-status-right">
-          <button onClick={() => setLang(lang === "en" ? "es" : "en")} title="language">{lang.toUpperCase()}</button>
-          <button onClick={() => setSound(!sound)} title="terminal sound">{sound ? "SND:ON" : "SND:OFF"}</button>
-          <button onClick={toggleMusic} title="procedural synthwave">{musicOn ? "SYNTH:ON" : "SYNTH:OFF"}</button>
+          <button className="pos-opt" onClick={() => setLang(lang === "en" ? "es" : "en")} aria-label="switch language" title="language">{lang.toUpperCase()}</button>
+          <button className="pos-opt" onClick={() => setSound(!sound)} aria-pressed={sound} title="terminal key sounds">SND</button>
+          <button className="pos-opt" onClick={toggleMusic} aria-pressed={musicOn} title="procedural synthwave">SYNTH</button>
+          <LogButton className="pos-opt pos-logbtn" mem={memory.mem} lang={lang} onOpen={() => setLogOpen(true)} />
           <Clock />
+          <button className="pos-menu-btn" onClick={() => setMenuOpen(!menuOpen)} aria-expanded={menuOpen} aria-controls="pos-sheet">{menuOpen ? t.menu_close : t.menu}</button>
+        </div>
+        <div className="pos-sheet" id="pos-sheet" hidden={!menuOpen}>
+          {NAV_IDS.map((id) => <a key={id} href={`#${id}`} onClick={go(id)}>{navLabels[id]}</a>)}
+          <div className="pos-sheet-ctl">
+            <button onClick={() => setLang(lang === "en" ? "es" : "en")} aria-label="switch language">{lang === "en" ? "EN / ES" : "ES / EN"}</button>
+            <button onClick={() => setSound(!sound)} aria-pressed={sound}>SND</button>
+            <button onClick={toggleMusic} aria-pressed={musicOn}>SYNTH</button>
+            <LogButton mem={memory.mem} lang={lang} onOpen={() => { setMenuOpen(false); setLogOpen(true); }} />
+          </div>
         </div>
       </header>
 
-      {/* hero */}
-      <section className="pos-hero">
-        {(reduced || !webglOk) && <Constellation paused={false} />}
-        <div className="pos-hero-inner">
-          <div className="pos-kicker">// SECURE SESSION ESTABLISHED — READ-ONLY GUEST ACCESS</div>
-          <h1 className="pos-name" data-text="MARCO PONCE">MARCO PONCE</h1>
-          <p className="pos-role">{t.role}</p>
-          <p className="pos-tagline">{t.tagline}</p>
-          <Uptime label={t.uptime} />
-          <div className="pos-hero-links">
-            <a href={LINKS.github} target="_blank" rel="noopener noreferrer">github</a>
-            <a href={LINKS.linkedin} target="_blank" rel="noopener noreferrer">linkedin</a>
-            <a href={LINKS.calendly} target="_blank" rel="noopener noreferrer">calendly</a>
-            <a href="#terminal" onClick={(e) => { e.preventDefault(); document.getElementById("terminal")?.scrollIntoView({ behavior: "smooth" }); }}>open terminal ↓</a>
+      <main id="top">
+        {/* hero: who, what, proof, how to reach me */}
+        <section className="pos-hero" aria-labelledby="pos-h1">
+          {(reduced || !webglOk) && <Constellation paused={false} />}
+          <div className="pos-hero-inner">
+            <p className="pos-greet">{t.role}</p>
+            {memory.welcome && <p className="pos-welcome">{memory.welcome}</p>}
+            <h1 className="pos-name" id="pos-h1">Marco <em>Ponce</em></h1>
+            <p className="pos-tagline">{t.tagline}</p>
+            <ul className="pos-proof" aria-label="highlights">
+              {proof.map((p) => <li key={p.l}><b>{p.n}</b><span>{p.l}</span></li>)}
+            </ul>
+            <div className="pos-cta">
+              <a className="pos-btn primary" href="/Marco_Ponce_Resume.pdf" download="Marco_Ponce_Resume.pdf" onClick={() => discover("resume")}>{t.cta_resume}</a>
+              <a className="pos-btn" href={LINKS.calendly} target="_blank" rel="noopener noreferrer">{t.cta_chat}</a>
+              <a className="pos-btn" href={LINKS.email}>{t.cta_email}</a>
+            </div>
+            <div className="pos-links">
+              <a href={LINKS.github} target="_blank" rel="noopener noreferrer">github</a>
+              <a href={LINKS.linkedin} target="_blank" rel="noopener noreferrer">linkedin</a>
+              <a href="#terminal" onClick={go("terminal")}>{t.open_terminal}</a>
+              <button className="cast-launch" onClick={() => setFishing(true)} aria-label="open the fishing minigame">{t.cast}</button>
+            </div>
+            <Uptime label={t.uptime} />
           </div>
-          <div className="pos-hint dim">drag the sea to look around · scroll to dive</div>
-        </div>
-      </section>
+          <div className="pos-hint" aria-hidden="true">{t.hint}</div>
+        </section>
 
-      {/* terminal */}
-      <section id="terminal" className="pos-section pos-reveal">
-        <h2 className="pos-h2">[01] {t.sec_terminal}</h2>
-        <p className="pos-sub">{t.terminal_hint}</p>
-        <Terminal lang={lang} setLang={setLang} playClick={playClick} onMatrix={() => setMatrix(true)}
-          onCast={() => setFishing(true)}
-          music={{ on: musicOn, toggle: toggleMusic }} />
-      </section>
+        {/* terminal */}
+        <section id="terminal" className="pos-section pos-reveal" aria-labelledby="h-terminal">
+          <h2 className="pos-h2" id="h-terminal">{t.sec_terminal}</h2>
+          <p className="pos-cap">{t.cap_terminal}</p>
+          <p className="pos-sub">{t.terminal_hint}</p>
+          <Terminal lang={lang} setLang={setLang} playClick={playClick} onMatrix={() => setMatrix(true)}
+            onCast={() => setFishing(true)}
+            music={{ on: musicOn, toggle: toggleMusic }} />
+        </section>
 
-      {/* service log */}
-      <section id="service-log" className="pos-section pos-reveal">
-        <h2 className="pos-h2">[02] {t.sec_experience}</h2>
-        <div className="pos-log">
-          {EXPERIENCE.map((e) => (
-            <article key={e.id} className="pos-log-entry pos-reveal">
-              <div className="pos-log-meta">
-                <span className="pos-log-id">{e.id}</span>
-                <span className="pos-log-period">{e.period}</span>
-                <span className="pos-log-clearance">{e.clearance}</span>
-              </div>
-              <h3>{e.role} <span className="at">@ {e.org}</span> <span className="loc">· {e.loc}</span></h3>
-              <ul>{e.log.map((l, i) => <li key={i}>{l}</li>)}</ul>
-              <div className="pos-chips">{e.stack.map((s) => <span key={s}>{s}</span>)}</div>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      {/* case files */}
-      <section id="case-files" className="pos-section pos-reveal">
-        <h2 className="pos-h2">[03] {t.sec_projects}</h2>
-        <p className="pos-sub">{t.dossier_hint}</p>
-        <div className="pos-files">
-          {PROJECTS.map((p) => (
-            <a key={p.code} className="pos-file pos-reveal" href={p.link} target="_blank" rel="noopener noreferrer" {...tilt}>
-              <div className="pos-file-top">
-                <span className="pos-file-code">{p.code}</span>
-                <span className="pos-file-status">{p.status}</span>
-              </div>
-              <h3>{p.name}</h3>
-              <p className="pos-file-brief">{p.brief}</p>
-              <div className="pos-redactions">
-                {p.redacted.map((r, i) => (
-                  <div key={i} className="pos-redact"><span>{r}</span></div>
-                ))}
-              </div>
-              <div className="pos-file-bottom">
-                <div className="pos-chips">{p.stack.map((s) => <span key={s}>{s}</span>)}</div>
-                <span className="pos-file-date">{p.date}</span>
-              </div>
-              <div className="pos-file-stamp">CLASSIFIED</div>
-            </a>
-          ))}
-        </div>
-      </section>
-
-      {/* satellite uplink — live GitHub telemetry under a hand-rolled 3D globe */}
-      <section id="uplink" className="pos-section pos-reveal">
-        <h2 className="pos-h2">[04] {t.sec_uplink}</h2>
-        <p className="pos-sub">live telemetry · api.github.com · rendered on a hand-rolled 3D wireframe globe</p>
-        <div className="pos-uplink-wrap">
-          <Globe3D />
-          <Uplink />
-        </div>
-      </section>
-
-      {/* research */}
-      <section id="research" className="pos-section pos-reveal">
-        <h2 className="pos-h2">[05] {t.sec_research}</h2>
-        <div className="pos-papers">
-          {PAPERS.map((p) => (
-            <a key={p.id} className="pos-paper pos-reveal" href={p.doi} target="_blank" rel="noopener noreferrer" {...tilt}>
-              <div className="pos-paper-stamp">DECLASSIFIED</div>
-              <div className="pos-paper-id">{p.id}</div>
-              <h3>{p.title}</h3>
-              <p>{p.venue} · {p.where}</p>
-              <p className="dim">{p.authors}</p>
-              <span className="pos-paper-link">read via DOI →</span>
-            </a>
-          ))}
-        </div>
-      </section>
-
-      {/* credentials */}
-      <section id="credentials" className="pos-section pos-reveal">
-        <h2 className="pos-h2">[06] {t.sec_certs}</h2>
-        <div className="pos-certs">
-          {CERTS.map((c) => <span key={c} className="pos-cert">{c}</span>)}
-        </div>
-        <p className="pos-sub dim">14 Anthropic + 1 AWS — issued 2026</p>
-      </section>
-
-      {/* contact */}
-      <section id="contact" className="pos-section pos-reveal">
-        <h2 className="pos-h2">[07] {t.sec_contact}</h2>
-        <div className="pos-contact">
-          <pre className="pos-contact-pre">{`$ sudo hire-marco
-[sudo] password for visitor: ********
-ACCESS GRANTED — recruitment protocol initiated`}</pre>
-          <p>{t.contact_line}</p>
-          <div className="pos-contact-links">
-            <a href={LINKS.email}>marcpon8@gmail.com</a>
-            <a href={LINKS.linkedin} target="_blank" rel="noopener noreferrer">linkedin/ponce-marco</a>
-            <a href={LINKS.github} target="_blank" rel="noopener noreferrer">github/poncema4</a>
-            <a href={LINKS.calendly} target="_blank" rel="noopener noreferrer">calendly — book a chat</a>
+        {/* experience */}
+        <section id="service-log" className="pos-section pos-reveal" aria-labelledby="h-exp">
+          <h2 className="pos-h2" id="h-exp">{t.sec_experience}</h2>
+          <p className="pos-cap">{t.cap_experience}</p>
+          <div className="pos-log">
+            {featured.map((e, i) => <ExperienceEntry key={`${e.id}-${i}`} e={e} />)}
           </div>
-        </div>
-      </section>
+          <details className="pos-more">
+            <summary>{t.more_roles(earlier.length)}</summary>
+            <div className="pos-log">
+              {earlier.map((e, i) => <ExperienceEntry key={`${e.id}-${i}`} e={e} />)}
+            </div>
+          </details>
+        </section>
+
+        {/* case files */}
+        <section id="case-files" className="pos-section pos-reveal" aria-labelledby="h-work">
+          <h2 className="pos-h2" id="h-work">{t.sec_projects}</h2>
+          <p className="pos-cap">{t.cap_projects}</p>
+          <div className="pos-files">
+            {PROJECTS.map((p, idx) => (
+              <a key={p.code} className={`pos-file pos-reveal${idx === 0 ? " feature" : ""}`} href={p.link} target="_blank" rel="noopener noreferrer" {...tilt}>
+                <div className="pos-file-top">
+                  <span className="pos-file-code">{p.code}</span>
+                  <span className="pos-file-status">{p.status}</span>
+                </div>
+                <h3>{p.name}</h3>
+                <p className="pos-file-brief">{p.brief}</p>
+                <div className="pos-redactions">
+                  {p.redacted.map((r, i) => (
+                    <div key={i} className="pos-redact" style={{ ["--i" as string]: i }}><span><Metric text={r} /></span></div>
+                  ))}
+                </div>
+                <div className="pos-file-bottom">
+                  <div className="pos-chips">{p.stack.map((x) => <span key={x}>{x}</span>)}</div>
+                  <span className="pos-file-date">{p.date}</span>
+                </div>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        {/* satellite uplink: live GitHub telemetry under a hand-rolled 3D globe */}
+        <section id="uplink" className="pos-section pos-reveal" aria-labelledby="h-uplink">
+          <h2 className="pos-h2" id="h-uplink">{t.sec_uplink}</h2>
+          <p className="pos-cap">{t.cap_uplink}</p>
+          <p className="pos-sub">{t.uplink_sub}</p>
+          <div className="pos-uplink-wrap">
+            <Globe3D />
+            <Uplink />
+          </div>
+        </section>
+
+        {/* research */}
+        <section id="research" className="pos-section pos-reveal" aria-labelledby="h-research">
+          <h2 className="pos-h2" id="h-research">{t.sec_research}</h2>
+          <p className="pos-cap">{t.cap_research}</p>
+          <div className="pos-papers">
+            {PAPERS.map((p) => (
+              <a key={p.id} className="pos-paper pos-reveal" href={p.doi} target="_blank" rel="noopener noreferrer" {...tilt}>
+                <span className="pos-paper-stamp">PUBLISHED</span>
+                <div className="pos-paper-id">{p.id}</div>
+                <h3>{p.title}</h3>
+                <p>{p.venue} &middot; {p.where}</p>
+                <p className="dim">{p.authors}</p>
+                <span className="pos-paper-link">read via DOI &rarr;</span>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        {/* skills and education: what a recruiter scans for, then the certifications */}
+        <section id="credentials" className="pos-section pos-reveal" aria-labelledby="h-certs">
+          <h2 className="pos-h2" id="h-certs">{t.sec_certs}</h2>
+          <p className="pos-cap">{t.cap_certs}</p>
+
+          <h3 className="pos-h3">{t.edu}</h3>
+          <div className="pos-edu">
+            {EDUCATION.map((e) => (
+              <div key={e.degree} className="pos-edu-card">
+                <span className="pos-edu-when">{e.when}</span>
+                <strong>{e.degree}</strong>
+                <span className="pos-edu-school">{e.school} &middot; {e.gpa}</span>
+              </div>
+            ))}
+          </div>
+
+          <h3 className="pos-h3">{t.toolbox}</h3>
+          <div className="pos-tools">
+            {TOOLBOX.map((g) => (
+              <div key={g.label} className="pos-tool-row">
+                <span className="pos-tool-label">{g.label}</span>
+                <div className="pos-chips">{g.items.map((i) => <span key={i}>{i}</span>)}</div>
+              </div>
+            ))}
+          </div>
+
+          <h3 className="pos-h3">{t.certs_h} <span className="pos-h3-note">{t.credentials_sub}</span></h3>
+          <div className="pos-certs">
+            {CERTS.map((c) => <span key={c} className={`pos-cert${c.startsWith("AWS") ? " aws" : ""}`}>{c}</span>)}
+          </div>
+        </section>
+
+        {/* contact: the treasure at the bottom of the sea */}
+        <section id="contact" className="pos-section pos-reveal" aria-labelledby="h-contact">
+          <h2 className="pos-h2" id="h-contact">{t.sec_contact}</h2>
+          <p className="pos-cap">{t.cap_contact}</p>
+          <div className="pos-contact">
+            <div>
+              <p className="pos-contact-big">{t.contact_big}</p>
+              <p>{t.contact_sub}</p>
+            </div>
+            <div className="pos-contact-links">
+              <a className="primary" href={LINKS.email}>marcpon8@gmail.com <small>email</small></a>
+              <a href={LINKS.calendly} target="_blank" rel="noopener noreferrer">{t.cta_chat} <small>calendly</small></a>
+              <a href="/Marco_Ponce_Resume.pdf" download="Marco_Ponce_Resume.pdf" onClick={() => discover("resume")}>{t.cta_resume} <small>pdf</small></a>
+              <a href={LINKS.linkedin} target="_blank" rel="noopener noreferrer">linkedin/ponce-marco <small>linkedin</small></a>
+              <a href={LINKS.github} target="_blank" rel="noopener noreferrer">github/poncema4 <small>github</small></a>
+            </div>
+          </div>
+        </section>
+      </main>
 
       <footer className="pos-footer">
-        <span>PONCE-OS 6.0 'Leviathan' · deny by default, ship by Friday</span>
-        <span className="dim">crew: marco (captain) · keel (first mate, AI) — type `keel` in the terminal</span>
-        <span className="dim">tip: ↑↑↓↓←→←→BA</span>
+        <span>PONCE-OS 6.0 'Leviathan' &middot; deny by default, ship by Friday</span>
+        <span className="dim">crew: marco (captain) &middot; keel (first mate, AI) &middot; type `keel` in the terminal</span>
+        <span className="dim">tip: &uarr;&uarr;&darr;&darr;&larr;&rarr;&larr;&rarr;BA</span>
       </footer>
     </div>
   );
 }
-
-/* ============================== CSS ============================== */
-
-const CSS = `
-:root { color-scheme: dark; }
-.pos-root, .pos-boot {
-  --bg: #050a08; --panel: #0a120e; --line: #12241c;
-  --green: #34d399; --green-hi: #6ee7b7; --cyan: #22d3ee; --amber: #fbbf24;
-  --txt: #c7d6cf; --dim: #5f7a6e;
-  background: var(--bg); color: var(--txt);
-  font-family: ui-monospace, "JetBrains Mono", "Fira Code", Menlo, Consolas, monospace;
-  min-height: 100vh;
-}
-.pos-root { overflow-x: hidden; }
-.pos-root *, .pos-boot * { box-sizing: border-box; }
-.pos-root ::selection { background: rgba(52,211,153,.3); }
-
-/* CRT scanlines + vignette */
-.pos-scanlines { position: fixed; inset: 0; pointer-events: none; z-index: 40;
-  background: repeating-linear-gradient(0deg, rgba(0,0,0,.12) 0 1px, transparent 1px 3px); }
-.pos-scanlines::after { content:""; position:absolute; inset:0;
-  background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.5)); }
-
-.pos-progress { position: fixed; top: 0; left: 0; height: 2px; z-index: 60;
-  background: linear-gradient(90deg, var(--green), var(--cyan)); box-shadow: 0 0 12px var(--green); }
-
-/* boot */
-.pos-boot { position: fixed; inset: 0; z-index: 100; display: flex; flex-direction: column;
-  align-items: flex-start; justify-content: center; padding: 8vh 6vw; cursor: pointer; }
-.pos-boot-inner { font-size: clamp(11px, 1.6vw, 14px); line-height: 1.65; }
-.pos-boot-inner .ok { color: var(--green); }
-.pos-boot-cursor { display:inline-block; animation: pos-blink 1s steps(1) infinite; color: var(--green-hi); }
-.pos-boot-skip { position: fixed; bottom: 24px; right: 28px; color: var(--dim); font-size: 12px; }
-@keyframes pos-blink { 50% { opacity: 0; } }
-
-/* status bar */
-.pos-statusbar { position: sticky; top: 0; z-index: 50; display: flex; align-items: center; gap: 18px;
-  padding: 10px 20px; background: rgba(5,10,8,.9); backdrop-filter: blur(8px);
-  border-bottom: 1px solid var(--line); font-size: 12.5px; }
-.pos-host { color: var(--green-hi); font-weight: 700; }
-.pos-nav { display: flex; gap: 14px; flex-wrap: wrap; }
-.pos-nav a { color: var(--dim); text-decoration: none; transition: color .2s; }
-.pos-nav a:hover { color: var(--green-hi); }
-.pos-nav a.on { color: var(--green-hi); text-shadow: 0 0 10px rgba(52,211,153,.6); }
-.pos-status-right { margin-left: auto; display: flex; gap: 10px; align-items: center; }
-.pos-status-right button { background: transparent; border: 1px solid var(--line); color: var(--txt);
-  font: inherit; font-size: 11px; padding: 3px 8px; border-radius: 4px; cursor: pointer; }
-.pos-status-right button:hover { border-color: var(--green); color: var(--green-hi); }
-.pos-clock { color: var(--dim); font-variant-numeric: tabular-nums; }
-
-/* hero */
-.pos-hero { position: relative; min-height: 88vh; display: flex; align-items: center; padding: 60px 6vw; }
-.pos-constellation { position: absolute; inset: 0; width: 100%; height: 100%; }
-.pos-hero-inner { position: relative; z-index: 2; max-width: 900px; }
-.pos-kicker { color: var(--dim); font-size: 12px; letter-spacing: .12em; margin-bottom: 18px; }
-.pos-name { font-size: clamp(42px, 9vw, 108px); line-height: .95; margin: 0 0 14px; color: #eafff5;
-  letter-spacing: -0.02em; position: relative; text-shadow: 0 0 34px rgba(52,211,153,.25); }
-.pos-name::before, .pos-name::after { content: attr(data-text); position: absolute; inset: 0; opacity: 0; }
-.pos-name:hover::before { opacity: .8; color: var(--cyan); animation: pos-glitch 0.34s steps(2) infinite; clip-path: inset(0 0 55% 0); }
-.pos-name:hover::after  { opacity: .8; color: var(--amber); animation: pos-glitch 0.28s steps(2) infinite reverse; clip-path: inset(60% 0 0 0); }
-@keyframes pos-glitch { 0%{transform:translate(0)} 25%{transform:translate(-3px,1px)} 50%{transform:translate(2px,-1px)} 75%{transform:translate(-1px,2px)} 100%{transform:translate(0)} }
-.pos-role { color: var(--green-hi); font-size: clamp(14px, 2vw, 18px); margin: 0 0 6px; }
-.pos-tagline { color: var(--txt); margin: 0 0 26px; font-size: clamp(13px, 1.6vw, 16px); }
-.pos-uptime { display: inline-flex; flex-direction: column; gap: 2px; border: 1px solid var(--line);
-  border-left: 3px solid var(--green); background: var(--panel); padding: 10px 16px; border-radius: 6px; }
-.pos-uptime-num { font-size: clamp(18px, 3vw, 26px); color: #eafff5; font-variant-numeric: tabular-nums; }
-.pos-uptime-label { color: var(--dim); font-size: 11px; letter-spacing: .08em; }
-.pos-hero-links { margin-top: 26px; display: flex; gap: 18px; flex-wrap: wrap; }
-.pos-hero-links a { color: var(--cyan); text-decoration: none; border-bottom: 1px dashed rgba(34,211,238,.4); padding-bottom: 1px; }
-.pos-hero-links a:hover { color: #a5f3fc; border-bottom-style: solid; }
-.pos-hint { margin-top: 18px; font-size: 11.5px; letter-spacing: .08em; user-select: none; }
-
-/* sections */
-.pos-section { padding: 70px 6vw; max-width: 1200px; margin: 0 auto; }
-.pos-h2 { color: #eafff5; font-size: clamp(20px, 3vw, 28px); letter-spacing: .04em; margin: 0 0 8px;
-  border-bottom: 1px solid var(--line); padding-bottom: 12px; }
-.pos-sub { color: var(--dim); font-size: 13px; margin: 10px 0 26px; }
-.dim { color: var(--dim); }
-
-/* reveal */
-.pos-reveal { opacity: 0; transform: translateY(10px); transition: opacity .45s ease, transform .45s ease; }
-.pos-reveal.in { opacity: 1; transform: none; }
-@media (prefers-reduced-motion: reduce) { .pos-reveal { opacity: 1; transform: none; } }
-
-/* terminal */
-.pos-term { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: #030705;
-  box-shadow: 0 0 60px rgba(52,211,153,.07), inset 0 0 80px rgba(0,0,0,.6); cursor: text;
-  text-transform: lowercase; /* unix-chic: the terminal speaks only lowercase */ }
-.pos-term-bar { display: flex; align-items: center; gap: 7px; padding: 9px 13px; background: var(--panel);
-  border-bottom: 1px solid var(--line); }
-.pos-term-bar .dot { width: 11px; height: 11px; border-radius: 50%; }
-.dot.r { background: #f87171; } .dot.y { background: #fbbf24; } .dot.g { background: #34d399; }
-.pos-term-title { margin-left: 8px; color: var(--dim); font-size: 12px; }
-.pos-term-body { padding: 16px; height: 380px; overflow-y: auto; font-size: 13px; line-height: 1.55; }
-.pos-term-body .tl { white-space: pre-wrap; word-break: break-word; }
-.pos-term-body .cmd { color: #eafff5; }
-.pos-term-body .dim { color: var(--dim); }
-.pos-term-body .warn { color: var(--amber); }
-.pos-term-body .hd { color: var(--green-hi); font-weight: 700; }
-.pos-term-body .neo { color: var(--green); }
-.pos-term-input { display: flex; gap: 8px; align-items: center; }
-.pos-term-input .ps1 { color: var(--green-hi); white-space: nowrap; }
-.pos-term-input input { flex: 1; background: transparent; border: 0; outline: 0; color: #eafff5;
-  font: inherit; caret-color: var(--green); }
-.pos-term-input input::placeholder { color: #33473e; }
-
-/* service log */
-.pos-log { display: flex; flex-direction: column; gap: 14px; }
-.pos-log-entry { border: 1px solid var(--line); border-left: 3px solid var(--green); border-radius: 8px;
-  background: var(--panel); padding: 16px 18px; transition: border-color .2s, transform .2s; }
-.pos-log-entry:hover { border-left-color: var(--cyan); transform: translateX(4px); }
-.pos-log-meta { display: flex; gap: 14px; flex-wrap: wrap; font-size: 11px; margin-bottom: 8px; }
-.pos-log-id { color: var(--cyan); }
-.pos-log-period { color: var(--dim); }
-.pos-log-clearance { color: var(--amber); border: 1px solid rgba(251,191,36,.35); padding: 0 6px; border-radius: 3px; }
-.pos-log-entry h3 { margin: 0 0 8px; color: #eafff5; font-size: 15.5px; }
-.pos-log-entry .at { color: var(--green-hi); } .pos-log-entry .loc { color: var(--dim); font-weight: 400; font-size: 12.5px; }
-.pos-log-entry ul { margin: 0 0 10px; padding-left: 4px; list-style: none; }
-.pos-log-entry li { margin: 3px 0; font-size: 13px; color: var(--txt); padding-left: 16px; position: relative; }
-.pos-log-entry li::before { content: "▸"; position: absolute; left: 0; color: var(--green); }
-.pos-chips { display: flex; gap: 6px; flex-wrap: wrap; }
-.pos-chips span { font-size: 11px; color: var(--green); border: 1px solid var(--line); padding: 1px 8px; border-radius: 999px; }
-
-/* case files */
-.pos-files { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
-.pos-file { position: relative; display: block; text-decoration: none; color: inherit; overflow: hidden;
-  border: 1px solid var(--line); border-radius: 8px; background: var(--panel); padding: 16px 18px;
-  transition: transform .2s, border-color .2s; }
-.pos-file:hover { transform: translateY(-4px); border-color: rgba(52,211,153,.5); }
-.pos-file-top { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 8px; }
-.pos-file-code { color: var(--cyan); }
-.pos-file-status { color: var(--amber); }
-.pos-file h3 { margin: 0 0 8px; color: #eafff5; font-size: 17px; }
-.pos-file-brief { font-size: 12.5px; color: var(--txt); margin: 0 0 12px; line-height: 1.5; }
-.pos-redactions { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
-.pos-redact { position: relative; font-size: 12px; line-height: 1.5; }
-.pos-redact span { position: relative; z-index: 1; color: var(--green-hi); opacity: 0; transition: opacity .25s .05s; }
-.pos-redact::after { content: ""; position: absolute; inset: 1px 0; background: #16211b; border-radius: 2px;
-  transition: transform .3s ease, opacity .3s ease; transform-origin: left; z-index: 2; }
-.pos-file:hover .pos-redact::after { transform: scaleX(0); opacity: 0; }
-.pos-file:hover .pos-redact span { opacity: 1; }
-.pos-file-bottom { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-.pos-file-date { color: var(--dim); font-size: 11px; white-space: nowrap; }
-.pos-file-stamp { position: absolute; top: 14px; right: -34px; transform: rotate(35deg);
-  background: rgba(248,113,113,.14); color: #fca5a5; border: 1px solid rgba(248,113,113,.4);
-  font-size: 10px; letter-spacing: .2em; padding: 2px 36px; transition: opacity .25s; }
-.pos-file:hover .pos-file-stamp { opacity: 0; }
-
-/* research */
-.pos-papers { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
-.pos-paper { position: relative; border: 1px solid var(--line); border-radius: 8px; background: var(--panel);
-  padding: 20px; text-decoration: none; color: inherit; transition: transform .2s, border-color .2s; }
-.pos-paper:hover { transform: translateY(-4px); border-color: rgba(34,211,238,.5); }
-.pos-paper-stamp { position: absolute; top: 14px; right: 14px; transform: rotate(-8deg);
-  border: 2px solid rgba(52,211,153,.55); color: var(--green-hi); font-size: 10px; letter-spacing: .25em;
-  padding: 3px 8px; border-radius: 3px; }
-.pos-paper-id { color: var(--cyan); font-size: 11px; margin-bottom: 8px; }
-.pos-paper h3 { margin: 0 0 10px; color: #eafff5; font-size: 15px; line-height: 1.4; padding-right: 90px; }
-.pos-paper p { margin: 2px 0; font-size: 12.5px; }
-.pos-paper-link { display: inline-block; margin-top: 12px; color: var(--cyan); font-size: 12px; }
-
-/* credentials */
-.pos-certs { display: flex; flex-wrap: wrap; gap: 8px; }
-.pos-cert { font-size: 12px; color: var(--txt); border: 1px solid var(--line); background: var(--panel);
-  padding: 5px 12px; border-radius: 999px; transition: border-color .2s, color .2s; }
-.pos-cert:hover { border-color: var(--green); color: var(--green-hi); }
-
-/* contact */
-.pos-contact { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); padding: 24px; }
-.pos-contact-pre { color: var(--green); font-size: 12.5px; margin: 0 0 14px; white-space: pre-wrap; }
-.pos-contact p { margin: 0 0 16px; font-size: 14px; }
-.pos-contact-links { display: flex; gap: 18px; flex-wrap: wrap; }
-.pos-contact-links a { color: var(--cyan); text-decoration: none; border-bottom: 1px dashed rgba(34,211,238,.4); }
-.pos-contact-links a:hover { color: #a5f3fc; }
-
-/* footer */
-.pos-footer { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap;
-  padding: 26px 6vw 34px; color: var(--dim); font-size: 12px; border-top: 1px solid var(--line); }
-
-/* while dragging the sea: NOTHING is selectable (selection restored on release) */
-body.pos-dragging, body.pos-dragging * { user-select: none !important; -webkit-user-select: none !important; }
-
-/* decorative bits: not selectable (content stays selectable on purpose) */
-.pos-file-stamp, .pos-paper-stamp, .pos-boot, .pos-penguins, .pos-scanlines,
-.pos-boot-skip, .pos-kicker { user-select: none; }
-
-/* overlays */
-.pos-matrix { position: fixed; inset: 0; z-index: 90; pointer-events: none; }
-.pos-penguins { position: fixed; inset: 0; z-index: 95; pointer-events: none; overflow: hidden; }
-.pos-penguins span { position: absolute; top: -40px; color: var(--green-hi);
-  animation: pos-fall 3.2s linear forwards; }
-@keyframes pos-fall { to { transform: translateY(110vh) rotate(360deg); } }
-.pos-penguin-msg { position: absolute; bottom: 8vh; width: 100%; text-align: center; color: var(--green-hi);
-  font-size: 13px; letter-spacing: .08em; text-shadow: 0 0 18px rgba(52,211,153,.5); }
-
-/* 3D voyage — persistent world behind the whole site */
-.pos-scene3d { position: fixed; inset: 0; z-index: 0; }
-.pos-scene3d canvas { width: 100% !important; height: 100% !important; display: block; }
-.pos-root { background: transparent; }
-.pos-statusbar, .pos-hero-inner, .pos-section, .pos-footer { position: relative; z-index: 2; }
-
-/* sections float as glass panels in the water (no backdrop-filter: it forces
-   a per-frame re-blur of the animating canvas behind EVERY panel — jank city) */
-.pos-section { background: rgba(4, 10, 8, 0.84);
-  border: 1px solid var(--line); border-radius: 12px; margin: 26px auto; }
-.pos-footer { background: rgba(4, 10, 8, 0.84); }
-
-/* depth gauge */
-.pos-depth { position: fixed; right: 16px; bottom: 18px; z-index: 55; color: var(--green-hi);
-  font-size: 11px; letter-spacing: .14em; display: flex; align-items: flex-end; gap: 8px;
-  text-shadow: 0 0 12px rgba(52,211,153,.5); user-select: none; }
-.pos-depth-bar { width: 4px; height: 64px; border: 1px solid var(--line); border-radius: 2px;
-  display: inline-flex; align-items: flex-start; overflow: hidden; background: rgba(5,10,8,.6); }
-.pos-depth-bar span { display: block; width: 100%; background: linear-gradient(180deg, var(--green), var(--cyan)); }
-
-/* keel chat lines */
-.pos-term-body .keel { color: var(--cyan); }
-
-/* satellite uplink */
-.pos-uplink-wrap { position: relative; }
-.pos-globe { display: block; width: 100%; height: 300px; margin-bottom: 8px; }
-.pos-uplink { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); padding: 18px; font-size: 12.5px; }
-.pos-uplink-off { color: var(--dim); }
-.pos-uplink-head { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; color: var(--green-hi); }
-.pos-uplink-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--green);
-  box-shadow: 0 0 8px var(--green); margin-right: 6px; animation: pos-pulse 1.6s ease-in-out infinite; }
-.pos-uplink-dot.off { background: var(--amber); box-shadow: 0 0 8px var(--amber); animation: none; }
-@keyframes pos-pulse { 50% { opacity: .35; } }
-.pos-uplink-blink { animation: pos-blink 1s steps(1) infinite; }
-.pos-uplink-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; margin-bottom: 14px; }
-.pos-uplink-repo { display: block; border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px;
-  text-decoration: none; color: inherit; transition: border-color .2s, transform .2s; }
-.pos-uplink-repo:hover { border-color: rgba(34,211,238,.5); transform: translateY(-2px); }
-.pos-uplink-repo .name { color: var(--cyan); font-weight: 700; }
-.pos-uplink-repo-top { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
-.pos-uplink-repo p { margin: 0 0 6px; color: var(--txt); font-size: 12px; line-height: 1.45;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.pos-uplink-feed { border-top: 1px dashed var(--line); padding-top: 10px; display: flex; flex-direction: column; gap: 3px; }
-.pos-uplink-evt { display: flex; gap: 10px; color: var(--txt); font-size: 12px; }
-
-/* mobile */
-@media (max-width: 760px) {
-  .pos-statusbar { flex-wrap: wrap; gap: 8px 14px; padding: 8px 14px; }
-  .pos-nav { order: 3; width: 100%; overflow-x: auto; gap: 12px; padding-bottom: 2px;
-    -webkit-overflow-scrolling: touch; scrollbar-width: none; }
-  .pos-nav::-webkit-scrollbar { display: none; }
-  .pos-nav a { white-space: nowrap; font-size: 11px; }
-  .pos-hero { min-height: 72vh; padding-top: 40px; }
-  .pos-term-body { height: 320px; font-size: 12px; }
-  .pos-globe { height: 200px; }
-  .pos-paper h3 { padding-right: 0; }
-  .pos-section { padding: 48px 5vw; }
-}
-
-/* cast — fishing minigame (self-contained, appended) */
-${FISHING_CSS}
-`;
 
 export default PonceOS;

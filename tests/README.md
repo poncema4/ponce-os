@@ -64,9 +64,31 @@ would catch it.
 
 **E2E (Playwright) — `tests/e2e/`**
 Every test runs on **both** projects: `desktop` (Desktop Chrome) and `mobile` (Pixel 5).
-Covers the shell, the cast minigame, the mobile tap→focus chain, the leaderboard's offline
-fallback, third-party degradation, and regressions on what already shipped (`breach`, the
-`resume` PDF, a clean console).
+
+| Spec | What it proves |
+|---|---|
+| `site.spec.ts` | shell boots, `help`/`whoami`, cast launch + a11y basics, mobile tap-to-focus chain, leaderboard fallback, GitHub degradation, `breach`, resume PDF, clean console |
+| `mechanisms.spec.ts` | every terminal command, the `keel` assistant, `breach`, konami + matrix, `scan` privacy, resume download, every link, nav landing below the sticky bar, fallbacks, boot |
+| `design.spec.ts` | layout at 5 sizes (1440, 1024, 768, 390, 360): nothing covered, no sideways scroll, sticky bar, 44px tap targets, contrast, skip link, landmarks, privacy, self-hosted fonts |
+| `fishing.spec.ts` | the game as a real dialog (focus trap, scroll lock, focus return), tap/space/button input, early strikes spook the fish, the fish journal and flag, corrupt-save recovery, a full cast-to-land catch |
+| `helpers.ts` | shared `boot`, `runCmd`, `openMenuIfPhone` |
+
+Smooth-scroll and CSS transitions are slow under software rendering, so landing/transition
+checks **poll** (`expect.poll`) instead of sleeping for a fixed time.
+
+**Running locally on a machine Playwright's own browser installer refuses**
+This repo's Playwright wants a specific Chromium revision. If the installer refuses your OS,
+point a local, uncommitted config at a Chromium you already have and add the SwiftShader
+flags for WebGL (see `playwright.local.config.ts` if you made one, kept in `.git/info/exclude`):
+
+```bash
+npx playwright test -c playwright.local.config.ts
+```
+
+A full run under software rendering takes ~25-30 min (it is ~6-7 s per test). **Never run
+`vite build` into `dist/` while an e2e run is going**, and note that `reuseExistingServer`
+will happily serve a *stale* `dist/` from an old preview server: rebuild before you trust a
+red result.
 
 **Backend — manual, against real Upstash**
 `vite preview` has no `/api`, so the e2e suite cannot reach the function. The API is

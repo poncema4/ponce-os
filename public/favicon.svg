@@ -1,6 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="12" fill="#050a08"/>
-  <rect x="2" y="2" width="60" height="60" rx="10" fill="none" stroke="#12241c" stroke-width="2"/>
-  <path d="M14 20 L30 32 L14 44" fill="none" stroke="#34d399" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
-  <rect x="34" y="40" width="16" height="7" rx="2" fill="#34d399"/>
+  <defs>
+    <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1d5fb4"/><stop offset="1" stop-color="#071a36"/>
+    </linearGradient>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0b1d3a"/><stop offset="1" stop-color="#050c1a"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#bg)"/>
+  <circle cx="46" cy="16" r="7" fill="#eaf3ff"/>
+  <circle cx="46" cy="16" r="11" fill="#9fc8ff" opacity=".18"/>
+  <path d="M0 45 Q8 41 16 45 T32 45 T48 45 T64 45 V64 H0Z" fill="url(#sea)"/>
+  <path d="M31 9 V44" stroke="#f1ead8" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M31 11 Q41 20 39 32 L31 32Z" fill="#f4e7c3"/>
+  <path d="M31 14 Q20 22 22 33 L31 33Z" fill="#e6d6a8"/>
+  <path d="M31 9 L40 11 L31 14Z" fill="#f4b860"/>
+  <path d="M13 38 H51 L45 48 Q32 52 19 48Z" fill="#3a2414"/>
+  <path d="M13 38 H51" stroke="#f4b860" stroke-width="1.6" stroke-linecap="round"/>
+  <circle cx="22" cy="42.5" r="1.3" fill="#f4b860"/><circle cx="32" cy="43.5" r="1.3" fill="#f4b860"/><circle cx="42" cy="42.5" r="1.3" fill="#f4b860"/>
+  <path d="M6 51 Q14 48 22 51 T38 51 T54 51" stroke="#8fc2ff" stroke-width="1.6" fill="none" stroke-linecap="round" opacity=".7"/>
 </svg>

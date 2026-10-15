@@ -9,7 +9,7 @@ All colors MUST be HSL.
 @layer base {
   :root {
     /* Portfolio Dark Theme */
-    --background: 213 31% 11%;
+    --background: 220 60% 6%;
     --foreground: 210 40% 98%;
     
     --card: 217 19% 27%;
@@ -19,7 +19,7 @@ All colors MUST be HSL.
     --popover-foreground: 210 40% 98%;
     
     /* Cyan primary color for portfolio */
-    --primary: 188 78% 41%;
+    --primary: 213 90% 62%;
     --primary-foreground: 210 40% 98%;
     
     --secondary: 217 19% 27%;
@@ -28,7 +28,7 @@ All colors MUST be HSL.
     --muted: 217 19% 27%;
     --muted-foreground: 215 20.2% 65.1%;
     
-    --accent: 188 78% 41%;
+    --accent: 213 90% 62%;
     --accent-foreground: 210 40% 98%;
     
     --destructive: 0 62.8% 30.6%;
@@ -36,7 +36,7 @@ All colors MUST be HSL.
     
     --border: 217 19% 27%;
     --input: 217 19% 27%;
-    --ring: 188 78% 41%;
+    --ring: 213 90% 62%;
     
     --radius: 0.5rem;
     

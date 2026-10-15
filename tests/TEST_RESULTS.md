@@ -1,17 +1,46 @@
 # ponce-os — test results
 
-Last full run: **2026-07-16**. Regenerate with `npm test` (unit + e2e).
+Last full run: **2026-10-14** (after the redesign). Regenerate with `npm test` (unit + e2e).
 
 | Suite | Runner | Count | Result |
 |---|---|---|---|
-| Unit — fishing | Vitest | 17 | ✅ pass |
-| Unit — leaderboard | Vitest | 10 | ✅ pass |
-| E2E — desktop (Chrome) | Playwright | 20 | ✅ pass |
-| E2E — mobile (Pixel 5) | Playwright | 21 | ✅ pass |
-| **Total** | | **68** | ✅ **68 pass, 1 skipped** |
+| Unit (8 files: keel, github, scan, motion, leaderboard, fishing, fishing-journal, memory) | Vitest | 151 | ✅ pass |
+| E2E — desktop + mobile (Pixel 5), 5 spec files | Playwright | 284 | ✅ **278 pass, 6 skipped, 0 failed** |
+| Lint | ESLint | — | ✅ 0 errors (warnings are pre-existing react-refresh notes) |
+| Types / build | tsc, vite | — | ✅ clean |
 
-The 1 skip is intentional: a real-touch `tap()` assertion that only the mobile
-project can run (the desktop context has no touch support).
+The 6 skips are intentional (admin-key paths that need a secret the CI/local run does not have,
+and a real-touch `tap()` that only the mobile project can run).
+
+## What the redesign fixed (found by writing the tests first)
+
+Real bugs the new suite caught, not just cosmetic changes:
+
+- `cat arcova.txt` printed the wrong job (it matched by position, not id).
+- `scan` output never highlighted (compared upper vs lower case).
+- Striking early in the fishing game did nothing: `press()` routed `approach`/`waiting` to `cast()`, which returns immediately, so the "spooked it" rule never fired.
+- Focus never returned to "cast a line" after closing the game (the button was unmounted while open).
+- The `ponce{...}` flag in the fishing journal was never displayed.
+- Duplicate React keys (two `SHU-` entries), a stale resume PDF, and a non-sticky status bar.
+- Old `--dim` text colour failed WCAG (4.07:1); every text token is now >= 4.5:1 (asserted in `design.spec.ts`).
+- Jitter: motion used per-frame constants (speed varied with fps). Now dt-based (`motion.ts`, 16 unit tests), scroll reads cached, pixel ratio adaptive.
+
+## New spec files
+
+| Spec | Covers |
+|---|---|
+| `mechanisms.spec.ts` | every terminal command, keel, breach, konami, matrix, scan privacy, resume, links, nav landing |
+| `design.spec.ts` | 5 viewport sizes: nothing covered, no sideways scroll, sticky bar, 44px targets, contrast, skip link, landmarks, fonts |
+| `fishing.spec.ts` | dialog behaviour, tap/space input, early strike, fish journal (23 species), full catch |
+| `memory.spec.ts` | returning-visitor welcome, discoveries, captain's log dialog, corrupt-save safety, lantern cursor |
+
+## Performance (software rendering; real-GPU smoothness cannot be shown on this laptop)
+
+Same-conditions A/B vs the old build under SwiftShader: JS per frame ~1 ms, 0 long tasks, layout
+work per frame down (0.09 vs 0.14), scroll/drag/hover frame rates up. Idle is slower on a software
+rasteriser because the ship is now far more detailed; shader pre-compilation recovered most of it.
+The smoothness fixes are structural (dt-based motion, cached scroll, adaptive resolution), so they
+help real GPUs most.
 
 ## Commands
 

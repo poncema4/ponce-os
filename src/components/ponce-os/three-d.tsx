@@ -91,7 +91,7 @@ export function Globe3D() {
             if (!started) { ctx.moveTo(sx, sy); started = true; }
             else ctx.lineTo(sx, sy);
           }
-          ctx.strokeStyle = pass === 1 ? "rgba(52,211,153,0.55)" : "rgba(52,211,153,0.10)";
+          ctx.strokeStyle = pass === 1 ? "rgba(52,121,211,0.55)" : "rgba(52,121,211,0.10)";
           ctx.lineWidth = pass === 1 ? 1 : 0.6;
           ctx.stroke();
         }
@@ -108,13 +108,13 @@ export function Globe3D() {
           const [sx, sy] = project(q, R, cx, cy);
           const behind = q[2] > 0;
           const alpha = (1 - k / trail) * (behind ? 0.25 : 0.9);
-          ctx.fillStyle = k === 0 ? `rgba(34,211,238,${behind ? 0.5 : 1})` : `rgba(34,211,238,${alpha * 0.35})`;
+          ctx.fillStyle = k === 0 ? `rgba(34,101,238,${behind ? 0.5 : 1})` : `rgba(34,101,238,${alpha * 0.35})`;
           ctx.beginPath();
           ctx.arc(sx, sy, k === 0 ? 2.4 : 1, 0, Math.PI * 2);
           ctx.fill();
           // beam from lead satellite down to globe, occasionally
           if (k === 0 && Math.sin(t * 0.8 + s.phase) > 0.75 && !behind) {
-            ctx.strokeStyle = "rgba(34,211,238,0.25)";
+            ctx.strokeStyle = "rgba(34,101,238,0.25)";
             ctx.setLineDash([2, 4]);
             ctx.beginPath();
             ctx.moveTo(sx, sy);
@@ -126,8 +126,8 @@ export function Globe3D() {
       }
       // soft glow core
       const g = ctx.createRadialGradient(cx, cy, R * 0.2, cx, cy, R * 1.15);
-      g.addColorStop(0, "rgba(52,211,153,0.05)");
-      g.addColorStop(1, "rgba(52,211,153,0)");
+      g.addColorStop(0, "rgba(52,121,211,0.05)");
+      g.addColorStop(1, "rgba(52,121,211,0)");
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, w, h);
     };
@@ -143,16 +143,35 @@ export function Globe3D() {
 }
 
 // Mouse-tracking 3D tilt: attach returned handlers to any card.
+// Only for a real mouse (hover + fine pointer): on a phone a tap fires emulated mouse events and the card
+// would stay tilted. Skipped under reduced motion. The transform is applied once per animation frame and
+// the transition is switched off while the pointer is moving, otherwise every mousemove restarts a 200 ms
+// CSS transition and the card lags behind the cursor.
+const canTilt = () =>
+  typeof window !== "undefined" &&
+  window.matchMedia("(hover: hover) and (pointer: fine)").matches &&
+  !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
 export function useTilt(max = 7) {
   const onMove = useCallback((e: React.MouseEvent<HTMLElement>) => {
+    if (!canTilt()) return;
     const el = e.currentTarget;
+    const { clientX, clientY } = e;
     const r = el.getBoundingClientRect();
-    const px = (e.clientX - r.left) / r.width - 0.5;
-    const py = (e.clientY - r.top) / r.height - 0.5;
-    el.style.transform = `perspective(700px) rotateY(${px * max}deg) rotateX(${-py * max}deg) translateY(-4px)`;
+    const px = (clientX - r.left) / r.width - 0.5;
+    const py = (clientY - r.top) / r.height - 0.5;
+    const prev = (el as HTMLElement & { _raf?: number })._raf;
+    if (prev) cancelAnimationFrame(prev);
+    (el as HTMLElement & { _raf?: number })._raf = requestAnimationFrame(() => {
+      el.style.transition = "border-color .2s";
+      el.style.transform = `perspective(700px) rotateY(${px * max}deg) rotateX(${-py * max}deg) translateY(-4px)`;
+    });
   }, [max]);
   const onLeave = useCallback((e: React.MouseEvent<HTMLElement>) => {
-    e.currentTarget.style.transform = "";
+    const el = e.currentTarget as HTMLElement & { _raf?: number };
+    if (el._raf) cancelAnimationFrame(el._raf);
+    el.style.transition = ""; // hand the easing back to the stylesheet for a smooth return
+    el.style.transform = "";
   }, []);
   return { onMouseMove: onMove, onMouseLeave: onLeave };
 }
