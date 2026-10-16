@@ -475,7 +475,7 @@ test.describe("boot", () => {
   });
 
   test("`reboot` clears that and plays the boot again", async ({ page }) => {
-    await boot(page);
+    await boot(page, { playBoot: true }); // about the boot itself: do not pre-seed the booted flag
     await runCmd(page, "reboot", 100);
     await page.waitForSelector(".pos-boot", { timeout: 8000 });
     await expect(page.locator(".pos-boot-inner")).toContainText(/PONCE-OS 6\.0/);

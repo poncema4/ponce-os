@@ -15,9 +15,16 @@ export async function stubGitHub(page: Page) {
   });
 }
 
-/** Load the site and wait until the boot sequence is over and the terminal input exists. */
-export async function boot(page: Page) {
+/**
+ * Load the site and wait until the terminal input exists.
+ *
+ * By default the fake-BIOS boot is skipped by seeding the same sessionStorage flag a real visitor gets
+ * after one boot (measured: 3.6 s of animation per test down to ~1 s, about 12 minutes off the full
+ * suite). Tests that are ABOUT the boot sequence pass { playBoot: true } or navigate themselves.
+ */
+export async function boot(page: Page, opts: { playBoot?: boolean } = {}) {
   await stubGitHub(page);
+  if (!opts.playBoot) await page.addInitScript(() => { try { sessionStorage.setItem("ponceos-booted", "1"); } catch { /* storage blocked */ } });
   await page.goto("/");
   const term = page.locator("input").first();
   await term.waitFor({ state: "visible", timeout: 30_000 });

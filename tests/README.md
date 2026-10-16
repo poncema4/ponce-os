@@ -68,6 +68,16 @@ sanitising. The load-bearing one is the **difficulty→points invariant**: a har
 always score more. That rule is easy to break silently while tuning, and no visual check
 would catch it.
 
+**Making runs faster**
+- `boot()` in `helpers.ts` seeds the same `sessionStorage` flag a real visitor has after one boot, so tests that are
+  not about the boot sequence skip the 3.6 s animation (about 30% off the suite). Pass `{ playBoot: true }` for the
+  ones that are about it.
+- `npm run test:fast` = unit tests + the desktop project only (about half the e2e time); run the full `npm test`
+  before a push.
+- Local-only tip: launching Chromium without WebGL roughly halves per-test time again (2.4 s vs 4.4 s). It is only
+  valid for specs that do not touch the 3D scene or assert a clean console (`mechanisms`, `quick-actions`); the
+  WebGL error it causes is expected there and is why `site` and the `fire` test must keep WebGL on.
+
 **E2E (Playwright) — `tests/e2e/`**
 Every test runs on **both** projects: `desktop` (Desktop Chrome) and `mobile` (Pixel 5).
 
