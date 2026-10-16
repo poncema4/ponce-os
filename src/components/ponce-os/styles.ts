@@ -12,6 +12,7 @@
 //             always reachable, motion only where it carries meaning, all of it off under reduced motion.
 import { FISHING_CSS } from "./fishing";
 import { LOG_CSS } from "./captains-log";
+import { PALETTE_CSS } from "./palette";
 
 export const CSS = `
 @font-face { font-family: "Newsreader"; font-style: normal; font-weight: 200 800; font-display: swap;
@@ -315,21 +316,26 @@ body.pos-dragging, body.pos-dragging * { user-select: none !important; -webkit-u
 }
 
 /* ================= phones: menu sheet instead of a three-row header; nothing fixed over content ================= */
-@media (max-width: 820px) {
+/* ================= the status bar needs ~930px for its full content: below that it becomes the hamburger ================= */
+@media (max-width: 1180px) { .pos-palbtn, .pos-clock { display: none; } }   /* Ctrl+K still works; the clock is decoration */
+@media (max-width: 900px) {
   .pos-statusbar { gap: 8px; }
   .pos-nav, .pos-status-right .pos-opt, .pos-clock { display: none; }
   .pos-status-right .pos-menu-btn { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; padding: 0; justify-content: center; }
-  .pos-term-input { min-height: 44px; }
   .pos-status-right { margin-left: auto; }
   .pos-sheet { display: block; position: absolute; left: 0; right: 0; top: 100%; background: rgb(5,12,26); border-bottom: 1px solid var(--line);
     padding: 6px 14px 16px; max-height: calc(100svh - var(--bar-h)); overflow-y: auto; }
   .pos-sheet[hidden] { display: none; }
   .pos-sheet a.on { color: var(--amber-hi); }
-  .pos-quick-btn { min-height: 44px; padding: 0 16px; font-size: 13px; }
   .pos-sheet a { display: flex; align-items: center; min-height: 48px; padding: 0 6px; color: var(--txt); text-decoration: none; font-size: 15px; border-bottom: 1px solid var(--line); }
   .pos-sheet-ctl { display: flex; gap: 8px; padding-top: 14px; flex-wrap: wrap; }
   .pos-sheet-ctl button { min-height: 44px; padding: 0 16px; background: transparent; border: 1px solid var(--line); color: var(--soft); border-radius: 8px; font: inherit; font-size: 13px; cursor: pointer; }
   .pos-sheet-ctl button[aria-pressed="true"] { border-color: var(--amber); color: var(--amber-hi); }
+}
+
+@media (max-width: 820px) {
+  .pos-term-input { min-height: 44px; }
+  .pos-quick-btn { min-height: 44px; padding: 0 16px; font-size: 13px; }
   /* the ship gets the top of the screen; the words sit below it. The hero is trimmed to make room. */
   .pos-hero { align-items: flex-end; padding: 20px 18px 70px; }
   .pos-hero::before { background: linear-gradient(0deg, rgba(5,12,26,.92) 0%, rgba(5,12,26,.8) 52%, rgba(5,12,26,0) 88%); }
@@ -360,4 +366,5 @@ body.pos-dragging, body.pos-dragging * { user-select: none !important; -webkit-u
 
 ${FISHING_CSS}
 ${LOG_CSS}
+${PALETTE_CSS}
 `;

@@ -14,6 +14,8 @@ import { runVisitorScan, scanLineClass } from "./ponce-os/scan";
 import { fetchGitHub, timeAgo } from "./ponce-os/github";
 import { Uplink } from "./ponce-os/uplink";
 import { useSiteMemory, CaptainsLog, DiscoveryToast, LogButton, Lantern } from "./ponce-os/captains-log";
+import { CommandPalette } from "./ponce-os/palette";
+import { buildItems, isPaletteHotkey, hotkeyLabel } from "./ponce-os/palette-model";
 import { discover, fireCannons } from "./ponce-os/memory";
 import { keelReply, KEEL_GREETING } from "./ponce-os/keel";
 import { Globe3D, useTilt } from "./ponce-os/three-d";
@@ -1149,11 +1151,46 @@ export function PonceOS() {
   const memory = useSiteMemory(lang, labelOf);
   const closeLog = useCallback(() => setLogOpen(false), []);
 
+  // Ctrl/Cmd+K: jump to a section or run something. Only once the site is up (not during the boot screen).
+  const [palOpen, setPalOpen] = useState(false);
+  const closePal = useCallback(() => setPalOpen(false), []);
+  useEffect(() => {
+    if (!booted) return;
+    // The keystroke that dismissed the boot screen ("any key skips it") is still dispatching when this listener is
+    // added, and would otherwise open the palette too. Ignore any event older than the listener.
+    const armedAt = performance.now();
+    const fn = (e: KeyboardEvent) => { if (e.timeStamp < armedAt) return; if (isPaletteHotkey(e)) { e.preventDefault(); setPalOpen((o) => !o); } };
+    window.addEventListener("keydown", fn);
+    return () => window.removeEventListener("keydown", fn);
+  }, [booted]);
+
   const go = (id: string) => (e: React.MouseEvent) => {
     // smooth glide, clean URL: no /#section residue. scroll-margin-top keeps the heading below the sticky bar.
     e.preventDefault();
     setMenuOpen(false);
     document.getElementById(id)?.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+  };
+
+  // Run a palette item. Deferred one tick so the dialog has unmounted (and the page can scroll again) first.
+  const runPalette = (id: string) => {
+    setPalOpen(false);
+    window.setTimeout(() => {
+      if (id.startsWith("go:")) { setMenuOpen(false); document.getElementById(id.slice(3))?.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" }); return; }
+      const newTab = (url: string) => window.open(url, "_blank", "noopener,noreferrer");
+      switch (id) {
+        case "resume": { const a = document.createElement("a"); a.href = "/Marco_Ponce_Resume.pdf"; a.download = "Marco_Ponce_Resume.pdf"; document.body.appendChild(a); a.click(); a.remove(); discover("resume"); break; }
+        case "chat": newTab(LINKS.calendly); break;
+        case "email": window.location.href = LINKS.email; break;
+        case "github": newTab(LINKS.github); break;
+        case "linkedin": newTab(LINKS.linkedin); break;
+        case "fish": setFishing(true); break;
+        case "fire": fireCannons(); break;
+        case "log": setLogOpen(true); break;
+        case "lang": setLang(lang === "en" ? "es" : "en"); break;
+        case "synth": toggleMusic(); break;
+        case "sound": setSound(!sound); break;
+      }
+    }, 0);
   };
 
   if (!booted) return (<><style>{CSS}</style><BootScreen onDone={finishBoot} lang={lang} /></>);
@@ -1174,6 +1211,7 @@ export function PonceOS() {
       <Lantern reduced={reduced} />
       <DiscoveryToast id={memory.toast} lang={lang} />
       {logOpen && <CaptainsLog mem={memory.mem} lang={lang} onClose={closeLog} />}
+      {palOpen && <CommandPalette items={buildItems(lang, navLabels)} lang={lang} onRun={runPalette} onClose={closePal} />}
       {matrix && <MatrixRain onDone={() => setMatrix(false)} />}
       {penguins && <PenguinRain onDone={() => setPenguins(false)} />}
       {fishing && <Fishing onClose={() => setFishing(false)} sound={sound} />}
@@ -1189,6 +1227,7 @@ export function PonceOS() {
           <button className="pos-opt" onClick={() => setSound(!sound)} aria-pressed={sound} title="terminal key sounds">SND</button>
           <button className="pos-opt" onClick={toggleMusic} aria-pressed={musicOn} title="procedural synthwave">SYNTH</button>
           <LogButton className="pos-opt pos-logbtn" mem={memory.mem} lang={lang} onOpen={() => setLogOpen(true)} />
+          <button className="pos-opt pos-palbtn" onClick={() => setPalOpen(true)} aria-haspopup="dialog" title="jump to anything">{hotkeyLabel(typeof navigator === "undefined" ? "" : navigator.platform || navigator.userAgent)}</button>
           <Clock />
           <button className="pos-menu-btn" onClick={() => setMenuOpen(!menuOpen)} aria-expanded={menuOpen} aria-controls="pos-sheet" aria-label={menuOpen ? t.menu_close : t.menu}>
             <span className="pos-burger" aria-hidden="true"><i /><i /><i /></span>

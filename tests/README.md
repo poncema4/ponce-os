@@ -89,6 +89,8 @@ Every test runs on **both** projects: `desktop` (Desktop Chrome) and `mobile` (P
 | `fishing.spec.ts` | the game as a real dialog (focus trap, scroll lock, focus return), tap/space/button input, early strikes spook the fish, the fish journal and flag, corrupt-save recovery, a full cast-to-land catch |
 | `memory.spec.ts` | returning-visitor welcome, discoveries, captain's log dialog, the `fire` cannons, corrupt-save safety |
 | `quick-actions.spec.ts` | hero declutter (resume/calendar/email stay in Contact), the phone hamburger (three lines, accessible name, becomes an X, thumb-sized), one-tap preset messages in the shell and in `keel`, no focus steal on phones |
+| `palette.spec.ts` | the Ctrl+K dialog: focus, ARIA combobox, filtering, arrow keys with wrap, Escape/backdrop/toggle, every action, Spanish + accent-insensitive search, shut during boot and for a plain `k`, thumb-sized rows |
+| `statusbar.spec.ts` | the sticky bar never clips at any width from 320 to 1920 px (it did between 821 and ~950), hamburger/nav swap at 900 px, palette button and clock only where there is room |
 | `helpers.ts` | shared `boot`, `runCmd`, `openMenuIfPhone` |
 
 Smooth-scroll and CSS transitions are slow under software rendering, so landing/transition

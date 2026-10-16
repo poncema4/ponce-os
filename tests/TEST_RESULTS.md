@@ -4,10 +4,17 @@ Last full run: **2026-10-15** (served with the real `vercel.json` security heade
 
 | Suite | Runner | Count | Result |
 |---|---|---|---|
-| Unit (10 files: keel, github, scan, motion, leaderboard, fishing, fishing-journal, memory, api-errors, seo) | Vitest | 171 | ✅ pass |
+| Unit (11 files: keel, github, scan, motion, leaderboard, fishing, fishing-journal, memory, api-errors, seo, palette) | Vitest | 190 | ✅ pass |
 | E2E — desktop + mobile (Pixel 5), 6 spec files, under the production CSP | Playwright | 304 | ✅ **298 pass, 6 skipped, 0 failed** |
 | Lint | ESLint | — | ✅ 0 errors (warnings are pre-existing react-refresh notes) |
 | Types / build | tsc, vite | — | ✅ clean |
+
+**Since that full run (2026-10-16):** added the Ctrl+K palette (`palette.spec.ts`, 22 across both projects) and the
+status-bar width sweep (`statusbar.spec.ts`), and moved the hamburger breakpoint from 820 to 900 px. The status-bar sweep
+was proven against the old CSS first (it failed at 850 and 899 px, with controls up to 105 px off screen). Re-verified
+afterwards: design, quick-actions, palette, statusbar on desktop + mobile (77 passed), and mechanisms, memory, site,
+fishing on desktop (123 passed, 2 intentional skips). The phone versions of mechanisms/memory/site/fishing were not
+re-run for this change; run the full `npm test` before the next release.
 
 The 6 skips are intentional (admin-key paths that need a secret the CI/local run does not have,
 and a real-touch `tap()` that only the mobile project can run).
