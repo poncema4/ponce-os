@@ -4,7 +4,7 @@ Last full run: **2026-10-15** (served with the real `vercel.json` security heade
 
 | Suite | Runner | Count | Result |
 |---|---|---|---|
-| Unit (11 files: keel, github, scan, motion, leaderboard, fishing, fishing-journal, memory, api-errors, seo, palette) | Vitest | 190 | ✅ pass |
+| Unit (12 files: keel, github, scan, motion, leaderboard, fishing, fishing-journal, memory, api-errors, seo, palette, bib) | Vitest | 200 | ✅ pass |
 | E2E — desktop + mobile (Pixel 5), 6 spec files, under the production CSP | Playwright | 304 | ✅ **298 pass, 6 skipped, 0 failed** |
 | Lint | ESLint | — | ✅ 0 errors (warnings are pre-existing react-refresh notes) |
 | Types / build | tsc, vite | — | ✅ clean |

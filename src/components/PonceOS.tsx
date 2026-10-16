@@ -15,6 +15,7 @@ import { fetchGitHub, timeAgo } from "./ponce-os/github";
 import { Uplink } from "./ponce-os/uplink";
 import { useSiteMemory, CaptainsLog, DiscoveryToast, LogButton, Lantern } from "./ponce-os/captains-log";
 import { CommandPalette } from "./ponce-os/palette";
+import { papersBib } from "./ponce-os/bib";
 import { buildItems, isPaletteHotkey, hotkeyLabel } from "./ponce-os/palette-model";
 import { discover, fireCannons } from "./ponce-os/memory";
 import { keelReply, KEEL_GREETING } from "./ponce-os/keel";
@@ -672,7 +673,7 @@ function Terminal({ lang, setLang, playClick, onMatrix, onCast, music }: {
           { text: "  whoami          who is this guy" },
           { text: "  neofetch        system information (the good stuff)" },
           { text: "  ls [projects]   list sections or case files" },
-          { text: "  cat <file>      read a file (try arcova.txt)" },
+          { text: "  cat <file>      read a file (try arcova.txt or papers.bib)" },
           { text: "  history         full career timeline" },
           { text: "  nmap marco      scan open ports" },
           { text: "  stack           languages and tools" },
@@ -703,9 +704,13 @@ function Terminal({ lang, setLang, playClick, onMatrix, onCast, music }: {
         if (arg.startsWith("project")) print(PROJECTS.map((p) => ({ text: `  ${p.code}  ${p.name.padEnd(14)} ${p.status}` })));
         else if (/^-a|^-la|^-al/.test(arg)) print([
           { text: "  terminal/  service-log/  case-files/  uplink/  research/  credentials/  contact/" },
+          { text: "  arcova.txt  papers.bib  motd" },
           { text: "  .kraken", cls: "keel" },
         ]);
-        else print([{ text: "  terminal/  service-log/  case-files/  uplink/  research/  credentials/  contact/" }]);
+        else print([
+          { text: "  terminal/  service-log/  case-files/  uplink/  research/  credentials/  contact/" },
+          { text: "  arcova.txt  papers.bib  motd" },
+        ]);
         break;
       case "su":
         setSuMode(true);
@@ -732,7 +737,9 @@ function Terminal({ lang, setLang, playClick, onMatrix, onCast, music }: {
         // when newer entries were added at the top, so `cat arcova.txt` printed the wrong job
         else if (arg === "arcova.txt") print((EXPERIENCE.find((e) => e.id === "ARC-2026") ?? EXPERIENCE[0]).log.map((s) => ({ text: "  - " + s })));
         else if (arg === "motd") print([{ text: "  deny by default, ship by friday." }]);
-        else if (!arg) print([{ text: "usage: cat <file> — try arcova.txt or motd", cls: "warn" }]);
+        // real BibTeX for both ACM papers, generated from the same PAPERS data the Research section renders
+        else if (arg === "papers.bib") print(papersBib(PAPERS).map((l) => ({ text: l ? "  " + l : "" })));
+        else if (!arg) print([{ text: "usage: cat <file> — try arcova.txt, papers.bib or motd", cls: "warn" }]);
         else print([{ text: `cat: ${arg}: permission denied (nice try)`, cls: "warn" }]);
         break;
       case "history":
