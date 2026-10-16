@@ -337,9 +337,13 @@ test.describe("content and links", () => {
     await expect(page.locator("h1")).toContainText("Marco Ponce");
     await expect(page.locator(".pos-tagline")).toContainText("I build AI systems that respect Zero Trust.");
     await expect(page.locator(".pos-proof li")).toHaveCount(4);
-    await expect(page.locator(".pos-hero .pos-btn.primary")).toHaveAttribute("href", "/Marco_Ponce_Resume.pdf");
-    await expect(page.locator(".pos-hero .pos-btn").nth(1)).toHaveAttribute("href", /calendly\.com\/ponce-marco/);
-    await expect(page.locator(".pos-hero .pos-btn").nth(2)).toHaveAttribute("href", "mailto:marcpon8@gmail.com");
+    // The resume / calendar / email buttons used to repeat here AND in Contact; they now live only in
+    // Contact (see quick-actions.spec.ts). The hero keeps the profile links and the nav leads to Contact.
+    await expect(page.locator(".pos-hero .pos-links a[href='https://github.com/poncema4']")).toHaveCount(1);
+    await expect(page.locator(".pos-hero .pos-links a[href*='linkedin.com/in/ponce-marco']")).toHaveCount(1);
+    await expect(page.locator("#contact a[href='/Marco_Ponce_Resume.pdf']")).toHaveAttribute("download", "Marco_Ponce_Resume.pdf");
+    await expect(page.locator("#contact a[href*='calendly.com/ponce-marco']")).toHaveCount(1);
+    await expect(page.locator("#contact a[href='mailto:marcpon8@gmail.com']")).toHaveCount(1);
   });
 
   test("the resume link serves a real, current PDF", async ({ page, request }) => {

@@ -78,6 +78,7 @@ Every test runs on **both** projects: `desktop` (Desktop Chrome) and `mobile` (P
 | `design.spec.ts` | layout at 5 sizes (1440, 1024, 768, 390, 360): nothing covered, no sideways scroll, sticky bar, 44px tap targets, contrast, skip link, landmarks, privacy, self-hosted fonts |
 | `fishing.spec.ts` | the game as a real dialog (focus trap, scroll lock, focus return), tap/space/button input, early strikes spook the fish, the fish journal and flag, corrupt-save recovery, a full cast-to-land catch |
 | `memory.spec.ts` | returning-visitor welcome, discoveries, captain's log dialog, the `fire` cannons, corrupt-save safety |
+| `quick-actions.spec.ts` | hero declutter (resume/calendar/email stay in Contact), the phone hamburger (three lines, accessible name, becomes an X, thumb-sized), one-tap preset messages in the shell and in `keel`, no focus steal on phones |
 | `helpers.ts` | shared `boot`, `runCmd`, `openMenuIfPhone` |
 
 Smooth-scroll and CSS transitions are slow under software rendering, so landing/transition

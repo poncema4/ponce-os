@@ -6,6 +6,7 @@
     <title>Marco Ponce</title>
     <meta name="description" content="Software engineer building AI systems that respect Zero Trust. Two ACM papers, four LLM features shipped to production, hackathon winner. Resume, projects, and a terminal that actually works." />
     <meta name="author" content="Marco Ponce" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
     <meta name="theme-color" content="#050c1a" />
     <meta name="color-scheme" content="dark" />
     <link rel="canonical" href="https://poncema4.vercel.app/" />
@@ -13,6 +14,9 @@
     <meta property="og:title" content="Marco Ponce: software engineer, AI systems and security" />
     <meta property="og:description" content="I build AI systems that respect Zero Trust. Two ACM papers, four LLM features in production, a hackathon win. Sail the 3D night sea, then talk to the terminal." />
     <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Marco Ponce" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="es_ES" />
     <meta property="og:url" content="https://poncema4.vercel.app/" />
     <meta property="og:image" content="https://poncema4.vercel.app/og.jpg" />
     <meta property="og:image:width" content="1200" />
@@ -23,6 +27,7 @@
     <meta name="twitter:title" content="Marco Ponce: software engineer, AI systems and security" />
     <meta name="twitter:description" content="I build AI systems that respect Zero Trust. Two ACM papers, four LLM features in production." />
     <meta name="twitter:image" content="https://poncema4.vercel.app/og.jpg" />
+    <meta name="twitter:image:alt" content="Marco Ponce, a pirate ship with a lit stern lantern sailing a dark sea at night" />
 
     <!-- the two typefaces are self-hosted (no third-party font requests); preload the one the headline uses -->
     <link rel="preload" href="/fonts/newsreader-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
@@ -31,14 +36,45 @@
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
-        "@type": "Person",
-        "name": "Marco Ponce",
-        "url": "https://poncema4.vercel.app/",
-        "jobTitle": "Software Engineer",
-        "description": "Software engineer building AI systems that respect Zero Trust.",
-        "alumniOf": { "@type": "CollegeOrUniversity", "name": "Seton Hall University" },
-        "knowsAbout": ["AI systems", "Zero Trust security", "LLM applications", "Python", "TypeScript", "Cloud engineering"],
-        "sameAs": ["https://github.com/poncema4", "https://www.linkedin.com/in/ponce-marco/"]
+        "@graph": [
+          {
+            "@type": "Person",
+            "@id": "https://poncema4.vercel.app/#marco",
+            "name": "Marco Ponce",
+            "url": "https://poncema4.vercel.app/",
+            "image": "https://poncema4.vercel.app/og.jpg",
+            "jobTitle": "Software Engineer",
+            "description": "Software engineer building AI systems that respect Zero Trust.",
+            "alumniOf": { "@type": "CollegeOrUniversity", "name": "Seton Hall University" },
+            "knowsAbout": ["AI systems", "Zero Trust security", "LLM applications", "Python", "TypeScript", "Cloud engineering"],
+            "knowsLanguage": ["English", "Spanish"],
+            "sameAs": ["https://github.com/poncema4", "https://www.linkedin.com/in/ponce-marco/"]
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://poncema4.vercel.app/#site",
+            "url": "https://poncema4.vercel.app/",
+            "name": "Marco Ponce",
+            "inLanguage": ["en", "es"],
+            "author": { "@id": "https://poncema4.vercel.app/#marco" }
+          },
+          {
+            "@type": "ScholarlyArticle",
+            "name": "RiskCast: Behavioral Risk Forecasting Across Multi-Modal Security Streams",
+            "url": "https://doi.org/10.1145/3806007.3810965",
+            "datePublished": "2026",
+            "isPartOf": { "@type": "Periodical", "name": "ACM IWSPA '26" },
+            "author": [{ "@type": "Person", "name": "S. Anand" }, { "@id": "https://poncema4.vercel.app/#marco" }, { "@type": "Person", "name": "D. Duong" }]
+          },
+          {
+            "@type": "ScholarlyArticle",
+            "name": "BBKR: Behavior-Driven Key Rotation for Zero Trust Network Security",
+            "url": "https://doi.org/10.1145/3806008.3811702",
+            "datePublished": "2026",
+            "isPartOf": { "@type": "Periodical", "name": "ACM SaT-CPS '26" },
+            "author": [{ "@type": "Person", "name": "S. Anand" }, { "@id": "https://poncema4.vercel.app/#marco" }, { "@type": "Person", "name": "D. Duong" }]
+          }
+        ]
       }
     </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -48,6 +84,19 @@
 
   <body>
     <div id="root"></div>
+    <noscript>
+      <main style="max-width:640px;margin:0 auto;padding:48px 20px;font:16px/1.6 system-ui,sans-serif;color:#e8e2d4;background:#050c1a">
+        <h1 style="font-weight:500">Marco Ponce</h1>
+        <p>Software engineer building AI systems that respect Zero Trust. Two ACM papers (2026), four LLM features shipped to production, a hackathon win.</p>
+        <p>This site is an interactive 3D terminal and needs JavaScript. Here is the short version:</p>
+        <ul>
+          <li><a href="https://github.com/poncema4" style="color:#f4b860">GitHub</a> and <a href="https://www.linkedin.com/in/ponce-marco/" style="color:#f4b860">LinkedIn</a></li>
+          <li><a href="/Marco_Ponce_Resume.pdf" style="color:#f4b860">Resume (PDF)</a></li>
+          <li>RiskCast, ACM IWSPA '26: <a href="https://doi.org/10.1145/3806007.3810965" style="color:#f4b860">doi.org/10.1145/3806007.3810965</a></li>
+          <li>BBKR, ACM SaT-CPS '26: <a href="https://doi.org/10.1145/3806008.3811702" style="color:#f4b860">doi.org/10.1145/3806008.3811702</a></li>
+        </ul>
+      </main>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

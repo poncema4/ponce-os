@@ -500,6 +500,10 @@ function BootScreen({ onDone, lang }: { onDone: () => void; lang: "en" | "es" })
 
 type TLine = { text: string; cls?: string };
 
+// [label shown, text sent]. Keel's chips are phrased so each one lands on a different answer.
+const SHELL_CHIPS: [string, string][] = [["help", "help"], ["whoami", "whoami"], ["stack", "stack"], ["scan me", "scan"], ["talk to keel", "keel"], ["crack the firewall", "breach"]];
+const KEEL_CHIPS: [string, string][] = [["who is marco?", "about marco"], ["pirateflow", "pirateflow"], ["his experience", "experience"], ["the research", "research"], ["hire marco", "how do i hire marco"], ["tell a joke", "tell me a joke"], ["leave channel", "exit"]];
+
 function buildNeofetch(): TLine[] {
   const info = [
     "marco@ponce-os",
@@ -935,6 +939,13 @@ function Terminal({ lang, setLang, playClick, onMatrix, onCast, music }: {
           />
         </div>
       </div>
+      {/* preset messages: one tap runs the command, so nobody has to know what to type */}
+      <div className="pos-quick" role="group" aria-label={keelMode ? "ask keel" : "quick commands"}>
+        <span className="pos-quick-lbl" aria-hidden="true">{keelMode ? "ask keel" : "try"}</span>
+        {(keelMode ? KEEL_CHIPS : SHELL_CHIPS).map(([label, cmd]) => (
+          <button key={label} type="button" className="pos-quick-btn" onClick={(e) => { e.stopPropagation(); playClick(); run(cmd); }}>{label}</button>
+        ))}
+      </div>
     </div>
   );
 }
@@ -1179,7 +1190,9 @@ export function PonceOS() {
           <button className="pos-opt" onClick={toggleMusic} aria-pressed={musicOn} title="procedural synthwave">SYNTH</button>
           <LogButton className="pos-opt pos-logbtn" mem={memory.mem} lang={lang} onOpen={() => setLogOpen(true)} />
           <Clock />
-          <button className="pos-menu-btn" onClick={() => setMenuOpen(!menuOpen)} aria-expanded={menuOpen} aria-controls="pos-sheet">{menuOpen ? t.menu_close : t.menu}</button>
+          <button className="pos-menu-btn" onClick={() => setMenuOpen(!menuOpen)} aria-expanded={menuOpen} aria-controls="pos-sheet" aria-label={menuOpen ? t.menu_close : t.menu}>
+            <span className="pos-burger" aria-hidden="true"><i /><i /><i /></span>
+          </button>
         </div>
         <div className="pos-sheet" id="pos-sheet" hidden={!menuOpen}>
           {NAV_IDS.map((id) => <a key={id} href={`#${id}`} onClick={go(id)}>{navLabels[id]}</a>)}
@@ -1204,11 +1217,6 @@ export function PonceOS() {
             <ul className="pos-proof" aria-label="highlights">
               {proof.map((p) => <li key={p.l}><b>{p.n}</b><span>{p.l}</span></li>)}
             </ul>
-            <div className="pos-cta">
-              <a className="pos-btn primary" href="/Marco_Ponce_Resume.pdf" download="Marco_Ponce_Resume.pdf" onClick={() => discover("resume")}>{t.cta_resume}</a>
-              <a className="pos-btn" href={LINKS.calendly} target="_blank" rel="noopener noreferrer">{t.cta_chat}</a>
-              <a className="pos-btn" href={LINKS.email}>{t.cta_email}</a>
-            </div>
             <div className="pos-links">
               <a href={LINKS.github} target="_blank" rel="noopener noreferrer">github</a>
               <a href={LINKS.linkedin} target="_blank" rel="noopener noreferrer">linkedin</a>
