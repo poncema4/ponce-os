@@ -738,7 +738,7 @@ function Terminal({ lang, setLang, playClick, onMatrix, onCast, music }: {
         else if (arg === "arcova.txt") print((EXPERIENCE.find((e) => e.id === "ARC-2026") ?? EXPERIENCE[0]).log.map((s) => ({ text: "  - " + s })));
         else if (arg === "motd") print([{ text: "  deny by default, ship by friday." }]);
         // real BibTeX for both ACM papers, generated from the same PAPERS data the Research section renders
-        else if (arg === "papers.bib") print(papersBib(PAPERS).map((l) => ({ text: l ? "  " + l : "" })));
+        else if (arg === "papers.bib") print(papersBib(PAPERS).map((l) => ({ text: l ? "  " + l : "", cls: "raw" })));
         else if (!arg) print([{ text: "usage: cat <file> — try arcova.txt, papers.bib or motd", cls: "warn" }]);
         else print([{ text: `cat: ${arg}: permission denied (nice try)`, cls: "warn" }]);
         break;

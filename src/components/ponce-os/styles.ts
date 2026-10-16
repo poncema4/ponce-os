@@ -156,6 +156,7 @@ html { scroll-behavior: smooth; }
 .pos-term-body .hd { color: var(--green-hi); font-weight: 700; }
 .pos-term-body .neo { color: var(--green); }
 .pos-term-body .keel { color: var(--cyan); }
+.pos-term-body .raw { text-transform: none; }   /* the terminal is lowercase by design; data meant to be copied (BibTeX) keeps its real case */
 .pos-term-input { display: flex; gap: 8px; align-items: center; min-height: 32px; }
 .pos-term-input .ps1 { color: var(--green-hi); white-space: nowrap; }
 .pos-term-input input { flex: 1; min-width: 0; background: transparent; border: 0; outline: 0; color: var(--txt); font: inherit; caret-color: var(--amber); }

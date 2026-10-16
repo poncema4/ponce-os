@@ -54,6 +54,17 @@ test.describe("terminal: every command", () => {
     });
   }
 
+  test("`cat papers.bib` keeps its real capitalisation (the terminal is lowercase by design, citations must not be)", async ({ page }) => {
+    await boot(page);
+    await runCmd(page, "cat papers.bib");
+    const t = await terminalText(page).innerText(); // innerText applies CSS text-transform, so this is what a visitor sees and copies
+    expect(t).toContain("title     = {RiskCast: Behavioral Risk Forecasting Across Multi-Modal Security Streams}");
+    expect(t).toContain("author    = {Anand, S. and Ponce, M. and Duong, D.}");
+    expect(t).toContain("booktitle = {ACM IWSPA '26}");
+    expect(t).toContain("title     = {BBKR: Behavior-Driven Key Rotation for Zero Trust Network Security}");
+    expect(t).toContain("booktitle = {ACM SaT-CPS '26}");
+  });
+
   test("`date` prints the current year", async ({ page }) => {
     await boot(page);
     await runCmd(page, "date");
