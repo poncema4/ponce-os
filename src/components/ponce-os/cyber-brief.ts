@@ -22,6 +22,7 @@ export interface BriefPage {
   pages: number;
   perPage: number;
   items: BriefItem[];
+  highlights?: BriefItem[]; // flagged + recent; present on the plain first page only
   archive: { ok: boolean; count: number; updated: number };
   sources: BriefSource[];
 }
@@ -45,7 +46,7 @@ export const CB = {
     stories: "stories",
     sourceDown: "unavailable right now",
     read: "Read at",
-    latest: "Recent posts",
+    latest: "Recent posts", attention: "Needs your attention", attentionCap: "New models and actively exploited threats from the last 3 days",
     searchLabel: "Search the archive", searchPh: "search titles and summaries...", clear: "Clear",
     prev: "Previous", next: "Next", pageN: "Page", jump: "Go to page (type a number, press Enter)",
     newBadge: "NEW", modelBadge: "NEW MODEL", alertBadge: "ALERT",
@@ -75,7 +76,7 @@ export const CB = {
     stories: "noticias",
     sourceDown: "no disponible ahora",
     read: "Leer en",
-    latest: "Publicaciones recientes",
+    latest: "Publicaciones recientes", attention: "Lo importante ahora", attentionCap: "Nuevos modelos y amenazas explotadas activamente de los ultimos 3 dias",
     searchLabel: "Buscar en el archivo", searchPh: "buscar en titulos y resumenes...", clear: "Borrar",
     prev: "Anterior", next: "Siguiente", pageN: "Pagina", jump: "Ir a la pagina (escribe un numero, pulsa Enter)",
     newBadge: "NUEVO", modelBadge: "NUEVO MODELO", alertBadge: "ALERTA",
@@ -170,6 +171,12 @@ export const CYBER_CSS = `
 .cb-search input { flex: 1; min-width: 0; min-height: 44px; background: var(--panel); border: 1px solid var(--line); color: var(--txt);
   font: inherit; font-size: 14px; padding: 0 14px; border-radius: 8px; }
 .cb-search input:focus-visible, .cb-filters button:focus-visible, .cb-pager button:focus-visible, .cb-post h3 a:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+.cb-hl { max-width: 820px; margin: 0 0 clamp(26px, 4vw, 40px); padding: 4px 0 0 clamp(14px, 2vw, 20px); border-left: 2px solid var(--amber); }
+.cb-hl h2 { margin: 0 0 4px; }
+.cb-hl .cb-list { border-top: 0; }
+.cb-hl .cb-post { padding: 12px 0; }
+.cb-hl .cb-post h3 { font-size: clamp(18px, 2.2vw, 22px); margin-bottom: 6px; }
+.cb-hl .cb-snip { display: none; }
 .cb-summary { color: var(--dim); font-size: 12.5px; margin: 0 0 6px; }
 .cb-summary b { color: var(--amber-hi); font-weight: 600; }
 .cb-list { max-width: 820px; border-top: 1px solid var(--line); }

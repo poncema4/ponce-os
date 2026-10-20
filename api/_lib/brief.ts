@@ -122,6 +122,7 @@ const LABS = new Set(["Anthropic", "OpenAI", "Google DeepMind"]);
 const MODEL_NAME = /\b(claude|opus|sonnet|haiku|gpt-?\d|gemini|llama|mistral|deepseek|qwen|grok)\b/i;
 const MODEL_FIRST = /^(claude[- ](opus|sonnet|haiku|fable|\d)|(gpt-?|gemini |llama |mistral |deepseek-?|qwen|grok )\d)/i;
 const LAUNCH_FIRST = /^(introducing|announcing|meet|say hello to)\b/i;
+const RECAP = /\b(weekly recap|week in review|newsletter|podcast)\b/i; // roundups mention every scary word; they are not the alert
 const ALERT = /zero[- ]day|actively exploited|exploited in the wild|data breach|ransomware attack|supply[- ]chain attack/i;
 
 // What deserves a badge. A new model from a lab (not point releases of a CLI), or a security
@@ -132,7 +133,7 @@ export function flagOf(i: Pick<Item, "title" | "source" | "topic" | "tag">): Fla
   const t = i.title.trim();
   const launch = (LAUNCH_FIRST.test(t) && MODEL_NAME.test(t)) || MODEL_FIRST.test(t);
   if (i.topic === "ai" && LABS.has(i.source) && launch) return "model";
-  if (i.topic === "cyber" && (i.tag === "ransomware" || ALERT.test(i.title))) return "alert";
+  if (i.topic === "cyber" && !RECAP.test(i.title) && (i.tag === "ransomware" || ALERT.test(i.title))) return "alert";
   return undefined;
 }
 
@@ -238,6 +239,12 @@ export async function collectLive(now = Date.now(), load = loadSource, light = f
   return { items, sources: results.map((r) => r.status) };
 }
 
+function reflag(i: Item): Item {
+  const { flag: _old, ...rest } = i;
+  const flag = flagOf(i);
+  return flag ? { ...rest, flag } : rest;
+}
+
 // Newest first, one row per link (fresh data wins), old rows aged out, size capped.
 export function mergeArchive(archive: Item[], fresh: Item[], now: number): Item[] {
   const byUrl = new Map<string, Item>();
@@ -246,6 +253,7 @@ export function mergeArchive(archive: Item[], fresh: Item[], now: number): Item[
   const oldest = now - KEEP_DAYS * 86_400_000;
   return [...byUrl.values()]
     .filter((i) => i.published >= oldest && !isNoise(i.title))
+    .map(reflag) // flags follow today's rules, not the rules in force when the story was archived
     .sort((a, b) => b.published - a.published)
     .slice(0, ARCHIVE_CAP);
 }
@@ -264,6 +272,22 @@ export function queryItems(items: Item[], o: { topic?: string; q?: string; page?
   const pages = Math.min(MAX_PAGES, Math.max(1, Math.ceil(hit.length / perPage)));
   const page = Math.min(pages, Math.max(1, Math.floor(Number(o.page)) || 1));
   return { total: Math.min(hit.length, pages * perPage), page, pages, perPage, items: hit.slice((page - 1) * perPage, page * perPage) };
+}
+
+// The few stories worth interrupting for: flagged (new model / alert) and recent. Newest first, at
+// most `max`, at most two from one source so a launch covered by five posts does not fill the strip.
+export function highlights(items: Item[], now: number, max = 5, hours = 72): Item[] {
+  const since = now - hours * 3_600_000;
+  const used: Record<string, number> = {};
+  const out: Item[] = [];
+  for (const i of [...items].sort((a, b) => b.published - a.published)) {
+    if (!i.flag || i.published < since || i.published > now + 3_600_000) continue;
+    if ((used[i.source] ?? 0) >= 2) continue;
+    used[i.source] = (used[i.source] ?? 0) + 1;
+    out.push(i);
+    if (out.length >= max) break;
+  }
+  return out;
 }
 
 export function isArchive(v: unknown): v is Archive {

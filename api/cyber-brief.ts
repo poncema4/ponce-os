@@ -8,7 +8,7 @@
 // Cached at Vercel's edge for 10 minutes, so upstream sees a handful of requests an hour no
 // matter how many people open the page. No visitor data is read, stored or logged.
 
-import { SOURCES, collectLive, isArchive, loadSource, mergeArchive, queryItems, type Item } from "./_lib/brief";
+import { SOURCES, collectLive, highlights, isArchive, loadSource, mergeArchive, queryItems, type Item } from "./_lib/brief";
 
 export const config = { runtime: "edge" };
 
@@ -46,9 +46,12 @@ export default async function handler(req: Request): Promise<Response> {
       q: (url.searchParams.get("q") ?? "").slice(0, 80),
       page: Number(url.searchParams.get("page")),
     });
+    const q = (url.searchParams.get("q") ?? "").trim();
     return json({
       generated: now,
       ...result,
+      // only on the plain first page: a search or page 7 is not the place to be interrupted
+      highlights: result.page === 1 && !q ? highlights(merged, now) : [],
       archive: { ok: archive.ok, count: archive.items.length, updated: archive.updated },
       // heavy sources are fetched by the Action only; show them as healthy when the archive is
       sources: [

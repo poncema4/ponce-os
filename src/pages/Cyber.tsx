@@ -174,6 +174,16 @@ export default function Cyber() {
             </form>
           </div>
 
+          {data && data.highlights && data.highlights.length > 0 && (
+            <aside className="cb-hl" aria-labelledby="cb-hl-h">
+              <h2 className="pos-h2" id="cb-hl-h" style={{ fontSize: "clamp(22px, 3vw, 30px)" }}>{t.attention}</h2>
+              <p className="cb-summary">{t.attentionCap}</p>
+              <div className="cb-list">
+                {data.highlights.map((it) => <Post key={`hl-${it.id}`} item={it} now={now} baseline={baseline.current ?? 0} lang={lang} />)}
+              </div>
+            </aside>
+          )}
+
           <div ref={listTop} style={{ scrollMarginTop: 80 }}>
             <h2 className="pos-h2" style={{ fontSize: "clamp(22px, 3vw, 30px)" }}>{t.latest}</h2>
             {data && (
@@ -191,7 +201,7 @@ export default function Cyber() {
           )}
 
           {data && (
-            <div className={`cb-list${busy ? " cb-busy" : ""}`}>
+            <div className={`cb-list cb-main${busy ? " cb-busy" : ""}`}>
               {data.items.length === 0
                 ? <p className="cb-state">{q ? t.noResults : t.empty}</p>
                 : data.items.map((it) => <Post key={it.id + it.url} item={it} now={now} baseline={baseline.current ?? 0} lang={lang} />)}

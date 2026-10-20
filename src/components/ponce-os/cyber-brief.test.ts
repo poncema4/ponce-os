@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ARCHIVE_CAP, archiveChanged, INGEST_DAYS, KEEP_DAYS, MAX_PAGES, SOURCES, clean, collectLive, flagOf, isNoise, itemId, mergeArchive, parseFeed, parseKev, queryItems, safeUrl, type Item } from "../../../api/_lib/brief";
+import { ARCHIVE_CAP, archiveChanged, highlights, INGEST_DAYS, KEEP_DAYS, MAX_PAGES, SOURCES, clean, collectLive, flagOf, isNoise, itemId, mergeArchive, parseFeed, parseKev, queryItems, safeUrl, type Item } from "../../../api/_lib/brief";
 import handler from "../../../api/cyber-brief";
 import { CB, ageLabel, agoLabel, hostOf, isBriefPage, isSafeHref, pageList, parseJump, pickBaseline } from "./cyber-brief";
 
@@ -103,6 +103,7 @@ describe("ids, flags, noise", () => {
   });
   it("flags active exploitation and breaches as alerts, and ransomware-tagged KEV rows", () => {
     expect(flagOf({ title: "Zero-day actively exploited in Widget", source: "X", topic: "cyber" })).toBe("alert");
+    expect(flagOf({ title: "Weekly Recap: 98 Zero-Days, Rogue AI Agents and a Data Breach", source: "The Hacker News", topic: "cyber" })).toBeUndefined();
     expect(flagOf({ title: "Patch Tuesday recap", source: "X", topic: "cyber" })).toBeUndefined();
     expect(flagOf({ title: "CVE-1: thing", source: "CISA KEV", topic: "cyber", tag: "ransomware" })).toBe("alert");
   });
@@ -157,6 +158,13 @@ describe("mergeArchive", () => {
     const m = mergeArchive([keep, gone, noise, null as unknown as Item, { url: 5 } as unknown as Item], [], NOW);
     expect(m).toEqual([keep]);
   });
+  it("recomputes flags from today's rules (adds a missing one, removes a stale one)", () => {
+    const stale = item({ url: "https://x.test/s", title: "Weekly Recap: Zero-Days", topic: "cyber", flag: "alert" });
+    const missing = item({ url: "https://x.test/m", title: "Introducing Claude Opus 9", source: "Anthropic", topic: "ai" });
+    const m = mergeArchive([stale, missing], [], NOW);
+    expect(m.find((i) => i.url === stale.url)?.flag).toBeUndefined();
+    expect(m.find((i) => i.url === missing.url)?.flag).toBe("model");
+  });
   it("caps the archive at 100 pages of 20, keeping the newest", () => {
     const many = Array.from({ length: 2100 }, (_, n) => item({ url: `https://x.test/${n}`, published: NOW - n * 1000 }));
     const m = mergeArchive(many, [], NOW);
@@ -175,6 +183,37 @@ describe("archiveChanged", () => {
     expect(archiveChanged([a], [])).toBe(true);
     expect(archiveChanged([a], [{ ...a, title: "edited" }])).toBe(true);
     expect(archiveChanged([a], [a, item({ url: "https://x.test/2" })])).toBe(true);
+  });
+});
+
+describe("highlights", () => {
+  const H = 3_600_000;
+  it("keeps only flagged stories from the last 72 hours, newest first", () => {
+    const items = [
+      item({ url: "https://x.test/a", title: "old launch", flag: "model", published: NOW - 80 * H }),
+      item({ url: "https://x.test/b", title: "no flag", published: NOW - 1 * H }),
+      item({ url: "https://x.test/c", title: "recent alert", flag: "alert", published: NOW - 10 * H }),
+      item({ url: "https://x.test/d", title: "newest launch", flag: "model", published: NOW - 2 * H, source: "OpenAI" }),
+      item({ url: "https://x.test/e", title: "from the future", flag: "alert", published: NOW + 9 * H }),
+    ];
+    expect(highlights(items, NOW).map((i) => i.title)).toEqual(["newest launch", "recent alert"]);
+  });
+  it("shows at most 5, and at most 2 from one source", () => {
+    const many = Array.from({ length: 9 }, (_, n) => item({ url: `https://x.test/${n}`, flag: "model", source: n < 6 ? "Gemini Fan" : `Src${n}`, published: NOW - n * H }));
+    const h = highlights(many, NOW);
+    expect(h).toHaveLength(5);
+    expect(h.filter((i) => i.source === "Gemini Fan")).toHaveLength(2);
+    expect(highlights([], NOW)).toEqual([]);
+  });
+  it("the endpoint sends them on the plain first page only", async () => {
+    const flagged = Array.from({ length: 25 }, (_, n) => item({ url: `https://arch.test/h${n}`, title: n === 0 ? "Introducing GPT-9 Story" : `Story ${n}`, source: "OpenAI", topic: "ai", published: Date.now() - (n + 1) * 3_600_000 }));
+    vi.stubGlobal("fetch", async (u: string) =>
+      String(u).includes("news-data") ? new Response(JSON.stringify({ version: 1, updated: Date.now(), items: flagged })) : new Response("down", { status: 500 }));
+    const get = async (qs: string) => (await handler(new Request(`https://x.test/api/cyber-brief${qs}`))).json();
+    expect((await get("")).highlights).toHaveLength(1);
+    expect((await get("?page=2")).highlights).toEqual([]);
+    expect((await get("?q=story")).highlights).toEqual([]);
+    vi.unstubAllGlobals();
   });
 });
 
