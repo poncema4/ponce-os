@@ -1,4 +1,5 @@
 {
+  "git": { "deploymentEnabled": { "news-data": false } },
   "rewrites": [{ "source": "/cyber", "destination": "/index.html" }],
   "headers": [
     {
