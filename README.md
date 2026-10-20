@@ -71,6 +71,10 @@ fetch all feeds, merge       branch news-data   archive + live feeds     list, s
 - **Badges**: NEW MODEL (a lab announces a model), ALERT (actively exploited / breach), NEW (since your
   last visit, kept in this browser only). No visitor data is sent anywhere.
 - Only titles, short excerpts and links are kept; every story links to the original.
+- Cost and upkeep: free (public repo, about 20 seconds of Actions every 30 minutes). GitHub pauses
+  scheduled workflows after 60 days with no activity in the repo; push anything, or run
+  `gh workflow run news-archive.yml`, to wake it. A failed run never emails you (the steps
+  are `continue-on-error`); a stuck archive shows as an old "newest story added" line on the page.
 - To add a source, add one line to `SOURCES` and a test; to run the archive by hand:
   `npx tsx scripts/news-archive.ts /tmp/news.json`.
 
