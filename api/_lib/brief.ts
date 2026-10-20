@@ -141,6 +141,7 @@ export function flagOf(i: Pick<Item, "title" | "source" | "topic" | "tag">): Fla
 export function isNoise(title: string): boolean {
   return (
     /stormcast|industrial control systems? advisor|\bICS advisor/i.test(title) ||
+    /^CISA adds .*known exploited vulnerabilit/i.test(title) || // bulletin; the KEV source lists each CVE by name
     /\b(raises?|raised|snags|secures|lands|bags)\b[^.]*\$\d|\bvaluation\b|\bseries [a-e]\b/i.test(title) // funding rounds are not the news you asked for
   );
 }

@@ -109,6 +109,8 @@ describe("ids, flags, noise", () => {
   it("treats ICS advisory bundles and Stormcast as noise, nothing else", () => {
     expect(isNoise("CISA Releases Nine Industrial Control Systems Advisories")).toBe(true);
     expect(isNoise("ISC Stormcast For Tuesday")).toBe(true);
+    expect(isNoise("CISA Adds Two Known Exploited Vulnerabilities to Catalog")).toBe(true);
+    expect(isNoise("CISA warns of actively exploited Cisco flaw")).toBe(false);
     expect(isNoise("Tolan snags $30M for its AI companion")).toBe(true);
     expect(isNoise("Tenstorrent hits $6.2B valuation to scale open-weight AI chips")).toBe(true);
     expect(isNoise("Startup raises $12 million Series A")).toBe(true);
