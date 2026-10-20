@@ -107,6 +107,24 @@ describe("ids, flags, noise", () => {
     expect(flagOf({ title: "Patch Tuesday recap", source: "X", topic: "cyber" })).toBeUndefined();
     expect(flagOf({ title: "CVE-1: thing", source: "CISA KEV", topic: "cyber", tag: "ransomware" })).toBe("alert");
   });
+  it("catches real exploitation and breach headlines, not the people and courts around them", () => {
+    const cyber = (title: string) => flagOf({ title, source: "The Hacker News", topic: "cyber" });
+    // headlines that matter, taken from the live feed
+    expect(cyber("Qilin and INC Ransomware Groups Exploit Palo Alto Networks Flaw to Bypass MFA")).toBe("alert");
+    expect(cyber("Critical FortiSIEM Flaw Gets Public Exploit PoC for Unauthenticated Remote Code Execution")).toBe("alert");
+    expect(cyber("Russian APT28 Breaches NATO Naval Shipbuilder in NATO Country, Deploys New Reflective Loader")).toBe("alert");
+    expect(cyber("OpenCode Console Breach May Have Exposed OpenAI, Anthropic, and Google API Keys")).toBe("alert");
+    expect(cyber("Cisco Warns of Active Attacks Exploiting New Critical Secure Email Gateway Vulnerability")).toBe("alert");
+    expect(cyber("Hackers Exploit Plex2Shell Flaws to Install Crypto Miners and Linux Proxy Backdoor")).toBe("alert");
+    expect(cyber("Drupal patches critical RCE flaws, warns exploits may emerge soon")).toBe("alert");
+    // stories about people, courts and research, and AI items, are not alerts
+    expect(cyber("When Your Ransomware Negotiator Works for the Other Side")).toBeUndefined();
+    expect(cyber("FBI Arrests Executive at Ransomware Negotiation Firm")).toBeUndefined();
+    expect(cyber("When AI Agents Commit Breaches, Humans May Not Be Held Liable")).toBeUndefined();
+    expect(cyber("Researchers Demonstrate OpenBSD Root Exploit Chaining 37-Year-Old Shared-Memory Bug")).toBeUndefined();
+    expect(cyber("How to build a security awareness program")).toBeUndefined();
+    expect(flagOf({ title: "Qilin Ransomware Groups Exploit Palo Alto Flaw", source: "TechCrunch AI", topic: "ai" })).toBeUndefined();
+  });
   it("treats ICS advisory bundles and Stormcast as noise, nothing else", () => {
     expect(isNoise("CISA Releases Nine Industrial Control Systems Advisories")).toBe(true);
     expect(isNoise("ISC Stormcast For Tuesday")).toBe(true);
