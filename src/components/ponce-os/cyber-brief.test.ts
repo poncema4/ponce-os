@@ -101,6 +101,14 @@ describe("ids, flags, noise", () => {
     expect(flagOf({ title: "Introducing Claude Opus 5.5", source: "Some Blog", topic: "ai" })).toBeUndefined();
     expect(flagOf({ title: "Anthropic opens Singapore office", source: "Anthropic", topic: "ai" })).toBeUndefined();
   });
+  it("flags a Hugging Face 'Welcome <open model>' post, not other Welcome posts or other sources", () => {
+    const hf = (title: string, source = "Hugging Face") => flagOf({ title, source, topic: "ai" });
+    expect(hf("Welcome Beam: a 501B open model you can own, customize, and scale")).toBe("model");
+    expect(hf("Welcome Muse Spark Open: open-weight frontier multimodal mixture-of-experts model from Meta")).toBe("model");
+    expect(hf("Welcome RL Environments to the hub")).toBeUndefined();
+    expect(hf("Scaling Indic Pretraining: 2.8 Trillion Tokens and an Open Data Generation Pipeline")).toBeUndefined();
+    expect(hf("Welcome Beam: a 501B open model", "Some Blog")).toBeUndefined();
+  });
   it("flags active exploitation and breaches as alerts, and ransomware-tagged KEV rows", () => {
     expect(flagOf({ title: "Zero-day actively exploited in Widget", source: "X", topic: "cyber" })).toBe("alert");
     expect(flagOf({ title: "Weekly Recap: 98 Zero-Days, Rogue AI Agents and a Data Breach", source: "The Hacker News", topic: "cyber" })).toBeUndefined();

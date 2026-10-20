@@ -122,6 +122,8 @@ const LABS = new Set(["Anthropic", "OpenAI", "Google DeepMind"]);
 const MODEL_NAME = /\b(claude|opus|sonnet|haiku|gpt-?\d|gemini|llama|mistral|deepseek|qwen|grok)\b/i;
 const MODEL_FIRST = /^(claude[- ](opus|sonnet|haiku|fable|\d)|(gpt-?|gemini |llama |mistral |deepseek-?|qwen|grok )\d)/i;
 const LAUNCH_FIRST = /^(introducing|announcing|meet|say hello to)\b/i;
+// Hugging Face announces other people's models as "Welcome <model>"; "Welcome RL Environments to the hub" is not one.
+const HF_MODEL = /^welcome\b.*(\bopen[- ]weight|\bopen model|\b\d+(\.\d+)?B\b|mixture-of-experts)/i;
 const RECAP = /\b(weekly recap|week in review|newsletter|podcast)\b/i; // roundups mention every scary word; they are not the alert
 const ALERT = /zero[- ]day|actively exploited|exploited in the wild|public exploit|\bexploit(s|ed|ing)?\b[^.]{0,60}\b(flaws?|vulnerabilit\w*|bugs?|cves?|rce)\b|\b(flaws?|vulnerabilit\w*|bugs?)\b[^.]{0,40}\bexploit(s|ed|ing)?\b|data breach|\bbreach(es|ed)?\b|ransomware (attack|group|gang)s?|supply[- ]chain attack|critical[^.]{0,40}(rce|remote code execution|unauthenticated)/i;
 // People and courts around an incident (negotiator opinion pieces, arrests, lawsuits) and proof-of-concept research are not the alert itself.
@@ -135,6 +137,7 @@ export function flagOf(i: Pick<Item, "title" | "source" | "topic" | "tag">): Fla
   const t = i.title.trim();
   const launch = (LAUNCH_FIRST.test(t) && MODEL_NAME.test(t)) || MODEL_FIRST.test(t);
   if (i.topic === "ai" && LABS.has(i.source) && launch) return "model";
+  if (i.topic === "ai" && i.source === "Hugging Face" && HF_MODEL.test(t)) return "model";
   if (i.topic === "cyber" && !RECAP.test(i.title) && (i.tag === "ransomware" || (ALERT.test(i.title) && !NOT_ALERT.test(i.title)))) return "alert";
   return undefined;
 }
