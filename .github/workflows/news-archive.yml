@@ -7,8 +7,8 @@ name: news-archive
 # GitHub's cron is best-effort and often skips runs, so each run also starts the next one: after
 # the archive step the `next` job waits about 25 minutes and re-dispatches this workflow (a run
 # started with the built-in token this way is allowed to trigger another). The cron stays as a
-# restart if the chain ever breaks; when two chains exist the older run keeps going and the newer
-# one stops, so they merge back into one.
+# restart if the chain ever breaks; a run only starts the next one when no other run is active, so
+# a second chain (for example one started by the cron) stops itself the next time it wakes.
 
 on:
   schedule:
@@ -67,12 +67,12 @@ jobs:
     timeout-minutes: 40
     continue-on-error: true
     steps:
-      - name: Wait, then start the next run unless an older run is already carrying on
+      - name: Wait, then start the next run unless another run is already carrying on
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           sleep 1500
-          older=$(gh run list --workflow news-archive.yml --repo "$GITHUB_REPOSITORY" --limit 50 \
-            --json databaseId,status --jq "[.[] | select(.status != \"completed\" and .databaseId < ${GITHUB_RUN_ID})] | length")
-          if [ "${older:-0}" -gt 0 ]; then echo "an older run is active ($older): this chain ends here"; exit 0; fi
+          others=$(gh run list --workflow news-archive.yml --repo "$GITHUB_REPOSITORY" --limit 50 \
+            --json databaseId,status --jq "[.[] | select(.status != \"completed\" and .databaseId != ${GITHUB_RUN_ID})] | length")
+          if [ "${others:-0}" -gt 0 ]; then echo "another run is active ($others): this chain ends here"; exit 0; fi
           gh workflow run news-archive.yml --repo "$GITHUB_REPOSITORY" --ref main
