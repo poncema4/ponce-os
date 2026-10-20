@@ -17,7 +17,7 @@ test.describe("command palette", () => {
     const input = page.locator(".pos-pal-input");
     await expect(input).toBeFocused();
     await expect(input).toHaveAttribute("role", "combobox");
-    expect(await opts(page).count()).toBe(18); // 7 sections + 5 links + 6 actions
+    expect(await opts(page).count()).toBe(19); // 7 sections + 6 links (incl. the Cyber Brief page) + 6 actions
     // aria-activedescendant must point at a real, selected option
     const id = await input.getAttribute("aria-activedescendant");
     expect(id).toBeTruthy();

@@ -1188,6 +1188,7 @@ export function PonceOS() {
         case "resume": { const a = document.createElement("a"); a.href = "/Marco_Ponce_Resume.pdf"; a.download = "Marco_Ponce_Resume.pdf"; document.body.appendChild(a); a.click(); a.remove(); discover("resume"); break; }
         case "chat": newTab(LINKS.calendly); break;
         case "email": window.location.href = LINKS.email; break;
+        case "cyber": window.location.href = "/cyber"; break;
         case "github": newTab(LINKS.github); break;
         case "linkedin": newTab(LINKS.linkedin); break;
         case "fish": setFishing(true); break;
@@ -1228,6 +1229,7 @@ export function PonceOS() {
         <a className="pos-host" href="#top" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: reduced ? "auto" : "smooth" }); }}>marco@ponce-os</a>
         <nav className="pos-nav" aria-label="sections">
           {NAV_IDS.map((id) => <a key={id} href={`#${id}`} onClick={go(id)}>{navLabels[id]}</a>)}
+          <a className="pos-nav-cyber" href="/cyber">{lang === "es" ? "ciber" : "cyber"}</a>
         </nav>
         <div className="pos-status-right">
           <button className="pos-opt" onClick={() => setLang(lang === "en" ? "es" : "en")} aria-label="switch language" title="language">{lang.toUpperCase()}</button>
@@ -1242,6 +1244,7 @@ export function PonceOS() {
         </div>
         <div className="pos-sheet" id="pos-sheet" hidden={!menuOpen}>
           {NAV_IDS.map((id) => <a key={id} href={`#${id}`} onClick={go(id)}>{navLabels[id]}</a>)}
+          <a href="/cyber">{lang === "es" ? "ciber" : "cyber"}</a>
           <div className="pos-sheet-ctl">
             <button onClick={() => setLang(lang === "en" ? "es" : "en")} aria-label="switch language">{lang === "en" ? "EN / ES" : "ES / EN"}</button>
             <button onClick={() => setSound(!sound)} aria-pressed={sound}>SND</button>

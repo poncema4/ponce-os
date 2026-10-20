@@ -118,7 +118,7 @@ test.describe("phone menu", () => {
     await btn.click();
     await expect(btn).toHaveAttribute("aria-expanded", "true");
     await expect(page.locator(".pos-sheet")).toBeVisible();
-    await expect(page.locator(".pos-sheet a")).toHaveCount(7);
+    await expect(page.locator(".pos-sheet a")).toHaveCount(8); // 7 sections + the Cyber Brief page (/cyber)
     await page.keyboard.press("Escape");
     await expect(page.locator(".pos-sheet")).toBeHidden();
     await expect(btn).toHaveAttribute("aria-expanded", "false");

@@ -53,14 +53,14 @@ const COPY = {
     go: "go to", do: "do", open: "open",
     fish: "Cast a line (fishing game)", fire: "Fire the cannons", lang: "Switch language (EN / ES)", synth: "Toggle the synthwave",
     sound: "Toggle key sounds", log: "Open the captain's log", resume: "Download resume (PDF)", chat: "Book a chat",
-    email: "Send an email", github: "Open GitHub", linkedin: "Open LinkedIn",
+    email: "Send an email", github: "Open GitHub", linkedin: "Open LinkedIn", cyber: "Open the Cyber Brief (security + AI news)",
   },
   es: {
     placeholder: "ve a una seccion o ejecuta algo...", empty: "nada coincide", title: "Ir a cualquier parte", hint: "enter para ejecutar, esc para cerrar",
     go: "ir a", do: "hacer", open: "abrir",
     fish: "Lanzar el anzuelo (juego de pesca)", fire: "Disparar los canones", lang: "Cambiar idioma (EN / ES)", synth: "Activar el synthwave",
     sound: "Activar sonido de teclas", log: "Abrir el diario del capitan", resume: "Descargar CV (PDF)", chat: "Agendar una llamada",
-    email: "Enviar un correo", github: "Abrir GitHub", linkedin: "Abrir LinkedIn",
+    email: "Enviar un correo", github: "Abrir GitHub", linkedin: "Abrir LinkedIn", cyber: "Abrir el Resumen Ciber (noticias de seguridad e IA)",
   },
 } as const;
 
@@ -74,6 +74,7 @@ export function buildItems(lang: Lang, sectionLabels: Record<string, string>): P
     { id: "resume", label: c.resume, group: "open", keywords: "cv pdf download hire" },
     { id: "chat", label: c.chat, group: "open", keywords: "calendar calendly meeting call schedule" },
     { id: "email", label: c.email, group: "open", keywords: "mail contact message reach" },
+    { id: "cyber", label: c.cyber, group: "open", keywords: "cyber brief news security ai anthropic openai breach threat noticias" },
     { id: "github", label: c.github, group: "open", keywords: "code repos git" },
     { id: "linkedin", label: c.linkedin, group: "open", keywords: "profile network" },
     { id: "fish", label: c.fish, group: "do", keywords: "game cast play minigame" },

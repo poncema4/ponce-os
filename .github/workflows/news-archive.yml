@@ -1,0 +1,54 @@
+name: news-archive
+
+# Keeps the Cyber Brief archive (news.json on the news-data branch) fresh: fetch every source
+# every 30 minutes, merge, commit only when something changed. The site's /api/cyber-brief reads
+# the file back, so history stays searchable. Scheduled runs only fire from the default branch.
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: news-archive
+  cancel-in-progress: false
+
+jobs:
+  archive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: code
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check out the data branch (create it the first time)
+        run: |
+          if git ls-remote --exit-code --heads "https://github.com/${GITHUB_REPOSITORY}.git" news-data >/dev/null 2>&1; then
+            git clone --depth 1 --branch news-data "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" data
+          else
+            mkdir data && cd data && git init -q -b news-data
+            git remote add origin "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git"
+          fi
+      # Both steps below are allowed to fail quietly: a failed scheduled run would email the repo
+      # owner every 30 minutes. The page shows "newest story added ... ago", so a stuck archive is
+      # visible there instead, and the edge function keeps serving live feeds meanwhile.
+      - name: Fetch and merge
+        continue-on-error: true
+        working-directory: code
+        run: npx --yes tsx@4.19.2 scripts/news-archive.ts ../data/news.json
+      - name: Commit when changed
+        continue-on-error: true
+        working-directory: data
+        run: |
+          [ -f news.json ] || { echo "::warning::no news.json produced this run"; exit 0; }
+          git add news.json
+          if git diff --cached --quiet; then echo "nothing new"; exit 0; fi
+          git -c user.name="news-archive" -c user.email="news-archive@users.noreply.github.com" \
+            commit -q -m "news: update archive $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push -q origin news-data
