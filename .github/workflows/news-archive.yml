@@ -3,6 +3,12 @@ name: news-archive
 # Keeps the Cyber Brief archive (news.json on the news-data branch) fresh: fetch every source
 # every 30 minutes, merge, commit only when something changed. The site's /api/cyber-brief reads
 # the file back, so history stays searchable. Scheduled runs only fire from the default branch.
+#
+# GitHub's cron is best-effort and often skips runs, so each run also starts the next one: after
+# the archive step the `next` job waits about 25 minutes and re-dispatches this workflow (a run
+# started with the built-in token this way is allowed to trigger another). The cron stays as a
+# restart if the chain ever breaks; when two chains exist the older run keeps going and the newer
+# one stops, so they merge back into one.
 
 on:
   schedule:
@@ -11,15 +17,16 @@ on:
 
 permissions:
   contents: write
-
-concurrency:
-  group: news-archive
-  cancel-in-progress: false
+  actions: write
 
 jobs:
   archive:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    # job-level, so a run that is only waiting to start the next one does not block the archive
+    concurrency:
+      group: news-archive
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
         with:
@@ -52,3 +59,20 @@ jobs:
           git -c user.name="news-archive" -c user.email="news-archive@users.noreply.github.com" \
             commit -q -m "news: update archive $(date -u +%Y-%m-%dT%H:%MZ)"
           git push -q origin news-data
+
+  next:
+    needs: archive
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    continue-on-error: true
+    steps:
+      - name: Wait, then start the next run unless an older run is already carrying on
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sleep 1500
+          older=$(gh run list --workflow news-archive.yml --repo "$GITHUB_REPOSITORY" --limit 50 \
+            --json databaseId,status --jq "[.[] | select(.status != \"completed\" and .databaseId < ${GITHUB_RUN_ID})] | length")
+          if [ "${older:-0}" -gt 0 ]; then echo "an older run is active ($older): this chain ends here"; exit 0; fi
+          gh workflow run news-archive.yml --repo "$GITHUB_REPOSITORY" --ref main
