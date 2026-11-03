@@ -99,9 +99,9 @@ const EXPERIENCE = [
     id: "ARC-2026", org: "Arcova", role: "Cybersecurity Consulting Intern", period: "JUN 2026 — DEC 2026",
     clearance: "AI TEAM", loc: "Holmdel, NJ",
     log: [
-      "Shipped a full-stack AI platform to Azure behind Entra ID SSO and 300+ CI tests, launching 4 LLM features to production",
-      "Architected keyless Claude inference on Vertex AI with IAM auth, eliminating 100% of stored credentials for SOC 2",
-      "Ported an agentic LangChain research pipeline with web-search tooling, slashing client research time by 95%",
+      "Drove an AI platform to production on Azure behind Entra ID SSO, with 300+ CI tests and 4 live LLM features",
+      "Closed a SOC 2 gap by moving Claude on Vertex AI to IAM-based keyless access, removing 100% of stored credentials",
+      "Compressed client research time by 95% by moving it onto a production agentic LangChain pipeline with web search",
     ],
     stack: ["Python", "FastAPI", "Next.js", "Azure", "Vertex AI", "LangChain", "SOC 2"],
   },
